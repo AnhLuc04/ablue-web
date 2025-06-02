@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        /* Thiết lập phong cách Material Design */
+        .card {
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background-color: #3f51b5;
+            color: white;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+
+<h1 class="text-center mb-4">Hello <span th:text="${username}"></span>!</h1>
+
+<!-- Nút đi đến trang tạo tài khoản Seller -->
+<div class="text-center mb-4">
+    <a th:href="@{/admin/create-seller}" class="btn btn-primary">Create Seller</a>
+    <a th:href="@{/logout}" class="btn btn-primary">Logout</a>
+</div>
+
+<!-- Chia bố cục hai bảng song song -->
+<div class="row">
+    <!-- Danh sách Seller -->
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h3 class="text-center">List Seller</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="seller : ${sellers}">
+                        <td th:text="${seller.username}"></td>
+                        <td th:text="${seller.email}"></td>
+                        <td>
+                            <span th:classappend="${seller.enabled} ? 'badge bg-success' : 'badge bg-danger'"
+                                  th:text="${seller.enabled} ? 'Active' : 'Disable'">
+                            </span>
+                        </td>
+
+                        <td>
+                            <a th:href="@{/admin/edit-seller/{id}(id=${seller.id})}" class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+                        </td>
+                        <td>
+                            <!-- Nút Delete -->
+                            <form th:action="@{/admin/delete-seller/{id}(id=${seller.id})}" method="post"
+                                  onsubmit="return confirm('Are you sure you want to delete this seller?');"
+                                  th:if="${seller.enabled}">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách Store -->
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h3 class="text-center">List Store</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name Store</th>
+                        <th>Name Seller</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="store : ${stores}">
+                        <td th:text="${store.id}"></td>
+                        <td th:text="${store.name}"></td>
+                        <td th:text="${store.seller.username}"></td>
+                        <td>
+                            <span th:classappend="${store.enabled} ? 'badge bg-success' : 'badge bg-danger'"
+                                  th:text="${store.enabled} ? 'Active' : 'Disable'">
+                            </span>
+                        </td>
+                        <td th:text="${#temporals.format(store.createdAt, 'dd-MM-yyyy HH:mm')}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

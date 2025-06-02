@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f7f7f7; }
+    .dashboard-header { background-color: #4285F4; color: white; padding: 30px; border-radius: 8px; text-align: center; }
+    .btn-custom { font-size: 16px; padding: 12px 25px; border-radius: 30px; transition: all 0.3s ease; width: 100%; }
+    .btn-blue { background-color: #4285F4; color: white; }
+    .btn-blue:hover { background-color: #3367D6; transform: scale(1.05); }
+    .btn-green { background-color: #0F9D58; color: white; }
+    .btn-green:hover { background-color: #0A7B41; transform: scale(1.05); }
+    .card { border-radius: 12px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15); }
+    .list-group-item { font-size: 14px; font-weight: 500; }
+  </style>
+</head>
+<body class="container mt-5">
+
+<div class="dashboard-header">
+  <h2>Chào mừng, <span th:text="${username}"></span>!</h2>
+  <p>Vai trò: <strong th:text="${role}"></strong></p>
+  <a th:href="@{/seller/profile}" class="btn btn-green">Profile</a>
+  <a th:href="@{/logout}" class="btn btn-green">Logout</a>
+</div>
+
+<div class="row mt-4">
+  <!-- Card Nhân Viên -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header text-center bg-primary text-white fw-bold">Quản lý Nhân Viên</div>
+      <div class="card-body">
+        <a th:href="@{/seller/create-user}" class="btn btn-blue btn-custom mb-3">Tạo tài khoản Nhân Viên</a>
+
+        <div class="mt-3">
+          <h5 class="text-center">Danh sách Nhân Viên</h5>
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                th:each="seller : ${sellers}">
+              <span th:text="${seller.username}"></span>
+
+              <!-- Nút Delete -->
+              <form th:action="@{/seller/delete/{id}(id=${seller.id})}" method="post"
+                    onsubmit="return confirm('Are you sure you want to delete this seller?');">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Store -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header text-center bg-success text-white fw-bold">Quản lý Cửa Hàng</div>
+      <div class="card-body">
+        <a th:href="@{/store/dashboard/create-store}" class="btn btn-green btn-custom mb-3">Tạo Store</a>
+
+        <div class="mt-3">
+          <h5 class="text-center">Danh sách Website</h5>
+<!--          <ul class="list-group">-->
+<!--            <li class="list-group-item" th:each="website : ${websites}" th:text="${website.name}"></li>-->
+<!--          </ul>-->
+<!--          <ul class="list-group">-->
+<!--            <li class="list-group-item" th:each="website : ${websites}">-->
+<!--              <a th:href="@{/store/dashboard/detail/{id}(id=${website.id})}" th:text="${website.name}"></a>-->
+<!--            <li class="list-group-item d-flex justify-content-between align-items-center" th:each="website : ${websites}">-->
+<!--              <span th:text="${website.name}"></span>-->
+<!--              <div>-->
+<!--                &lt;!&ndash; Nút Chi tiết &ndash;&gt;-->
+<!--                <a th:href="@{/store/dashboard/detail/{id}(id=${website.id})}" class="btn btn-sm btn-primary">Detail</a>-->
+
+<!--                &lt;!&ndash; Nút Xóa &ndash;&gt;-->
+<!--                <a th:href="@{/store/dashboard/delete/{id}(id=${website.id})}"-->
+<!--                   class="btn btn-sm btn-danger"-->
+<!--                   onclick="return confirm('Bạn có chắc chắn muốn xóa website này?');">-->
+<!--                  Delete-->
+<!--                </a>-->
+<!--                <a th:href="@{/store/dashboard/delete/{id}(id=${website.id})}"-->
+<!--                   class="btn btn-sm btn-success"-->
+<!--                   onclick="return confirm('Bạn có chắc chắn muốn xóa website này?');">-->
+<!--                  Oder-->
+<!--                </a>-->
+<!--                &lt;!&ndash; Nút Dashboard &ndash;&gt;-->
+<!--                <a th:href="@{/store/dashboard/{id}(id=${website.id})}" class="btn btn-sm btn-success">Category</a>-->
+<!--              </div>-->
+<!--            </li>-->
+<!--          </ul>-->
+
+
+
+
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center" th:each="website : ${websites}">
+              <span th:text="${website.name}"></span>
+              <div class="d-flex align-items-center gap-2">
+                <form th:action="@{/store/dashboard/delete/{id}(id=${website.id})}" method="post"
+                      onsubmit="return confirm('Are you sure you want to delete this website?');">
+                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+                <a th:href="@{/store/dashboard/detail/{id}(id=${website.id})}" class="btn btn-sm btn-primary">Chi tiết</a>
+                <a th:href="@{/category/{id}(id=${website.id})}" class="btn btn-sm btn-success">category</a>
+                <a th:href="@{/products/create-variation-product/{id}(id=${website.id})}" class="btn btn-sm btn-success">product</a>
+
+              </div>
+            </li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="mt-5 text-center text-muted">
+  <p>&copy; 2025 Công ty của bạn. Tất cả quyền lợi được bảo lưu.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo tài khoản Seller</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Tạo tài khoản Seller</h2>
+
+    <!-- Hiển thị thông báo lỗi -->
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <!-- Hiển thị thông báo thành công -->
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+    <form th:action="@{/admin/create-seller}" method="post" th:object="${user}">
+        <div class="mb-3">
+            <label for="username" class="form-label">Tên đăng nhập:</label>
+            <input type="text" id="username" name="username" th:field="*{username}" class="form-control" required/>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email:</label>
+            <input type="email" id="email" name="email" th:field="*{email}" class="form-control" required/>
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Mật khẩu:</label>
+            <input type="password" id="password" name="password" th:field="*{password}" class="form-control" required/>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Tạo tài khoản Seller</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <a href="/admin/dashboard" class="btn btn-secondary">Quay lại Dashboard</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+
+plugins {
+  id 'java'
+  id 'org.springframework.boot' version '3.4.3'
+  id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.ablue.ecommerce'
+version = '0.0.1-SNAPSHOT'
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+configurations {
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-security'
+  implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+  implementation 'org.springframework.boot:spring-boot-starter-web' // ✅ Đã đủ `spring-web`, `jakarta.servlet`
+// https://mvnrepository.com/artifact/net.coobird/thumbnailator
+  implementation("net.coobird:thumbnailator:0.4.20")
+  // ❌ LOẠI BỎ spring-web phiên bản 5.x (KHÔNG tương thích Jakarta Servlet!)
+  // implementation("org.springframework:spring-web:5.1.2.RELEASE") ← XÓA DÒNG NÀY
+
+  // PayPal SDK
+  implementation 'com.paypal.sdk:rest-api-sdk:1.14.0'
+  implementation 'com.paypal.sdk:checkout-sdk:1.0.2'
+
+  // Spring Core: KHÔNG cần thêm nếu đã dùng spring-boot-starter-* (Spring Boot đã tự kéo đúng version)
+  // implementation("org.springframework:spring-core:7.0.0-M3") ← CŨNG CÓ THỂ XÓA
+
+  implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.2.RELEASE'
+
+  compileOnly 'org.projectlombok:lombok'
+  annotationProcessor 'org.projectlombok:lombok'
+
+  runtimeOnly 'com.mysql:mysql-connector-j'
+
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testImplementation 'org.springframework.security:spring-security-test'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}

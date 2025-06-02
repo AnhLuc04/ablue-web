@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Tạo cửa hàng</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Tạo cửa hàng</h2>
+
+  <!-- Hiển thị thông báo lỗi -->
+  <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+  <!-- Hiển thị thông báo thành công -->
+  <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+  <form th:action="@{/store/dashboard/create-store}" method="post" th:object="${store}">
+    <div class="mb-3">
+      <label for="name" class="form-label">Tên cửa hàng:</label>
+      <input type="text" class="form-control" id="name" th:field="*{name}" required/>
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email cửa hàng:</label>
+      <input type="email" class="form-control" id="email" th:field="*{email}" required/>
+    </div>
+
+    <div class="mb-3">
+      <label for="phone" class="form-label">Số điện thoại:</label>
+      <input type="text" class="form-control" id="phone" th:field="*{phone}" required/>
+    </div>
+
+    <div class="mb-3">
+      <label for="address" class="form-label">Địa chỉ cửa hàng:</label>
+      <input type="text" class="form-control" id="address" th:field="*{address}" required/>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Tạo cửa hàng</button>
+  </form>
+
+
+  <div class="text-center mt-3">
+    <a href="/seller/dashboard" class="btn btn-secondary">Quay lại Dashboard</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

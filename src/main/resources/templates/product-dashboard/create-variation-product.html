@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Store Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background-color: #EF4444;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item-with-submenu {
+            position: relative;
+        }
+
+        .submenu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 200px;
+            background-color: white;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+            display: none;
+        }
+
+        .nav-item-with-submenu:hover .submenu {
+            display: block;
+        }
+
+        .submenu-item {
+            padding: 0.5rem 1rem;
+            color: #4b5563;
+            font-size: 0.875rem;
+            display: block;
+            transition: all 0.2s;
+        }
+
+        .submenu-item:hover {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .mobile-submenu {
+            display: none;
+            padding-left: 1rem;
+        }
+
+        .mobile-submenu-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .mobile-submenu-toggle:after {
+            content: '+';
+            font-size: 1rem;
+        }
+
+        .mobile-submenu-toggle.active:after {
+            content: '-';
+        }
+    </style>
+    <style>
+        .image-upload-container {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload-container:hover {
+            border-color: #4f46e5;
+        }
+
+        .image-preview {
+            max-height: 150px;
+            object-fit: contain;
+        }
+
+        .variation-chip {
+            transition: all 0.2s ease;
+        }
+
+        .variation-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        [contenteditable="true"] {
+            min-height: 40px;
+            border: 1px dashed #cbd5e0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- Left section - Logo and navigation -->
+            <div class="flex items-center space-x-8">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a class="flex items-center" href="#">
+                        <i class="fas fa-store text-indigo-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">StoreDash</span>
+                    </a>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a class="text-indigo-600 border-b-2 border-indigo-600 px-1 py-2 text-sm font-medium" href="#">Dashboard</a>
+
+                    <!-- Products with submenu -->
+                    <div class="nav-item-with-submenu">
+                        <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium flex items-center"
+                           href="#">
+                            Products
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </a>
+                        <div class="submenu">
+                            <a class="submenu-item" href="#">All Products</a>
+                            <a class="submenu-item" href="#">Categories</a>
+                            <a class="submenu-item" href="#">Inventory</a>
+                            <a class="submenu-item" th:href="@{'/products/create-variation-product/' + ${storeId}}">Add
+                                New</a>
+                        </div>
+                    </div>
+
+                    <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium" href="#">Orders</a>
+                    <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium" href="#">Customers</a>
+                    <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium" href="#">Analytics</a>
+                </nav>
+            </div>
+
+            <!-- Right section - Search and user menu -->
+            <div class="flex items-center space-x-4">
+                <!-- Search -->
+                <div class="relative hidden md:block">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input class="search-input block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           placeholder="Search..."
+                           type="text">
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button aria-controls="mobile-menu"
+                            aria-expanded="false"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" onclick="toggleMobileMenu()" type="button">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Notifications -->
+                <div class="relative">
+                    <button class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 relative"
+                            type="button">
+                        <span class="sr-only">View notifications</span>
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+
+                <!-- User dropdown -->
+                <div class="relative dropdown">
+                    <button aria-expanded="false" aria-haspopup="true" class="flex items-center space-x-2 focus:outline-none"
+                            id="user-menu-button" type="button">
+                        <img alt=""
+                             class="h-8 w-8 rounded-full"
+                             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                        <span class="hidden md:inline text-sm font-medium text-gray-700">John Doe</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-500 hidden md:inline"></i>
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div aria-labelledby="user-menu-button"
+                         aria-orientation="vertical" class="dropdown-menu hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu">
+                        <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#" role="menuitem">Your
+                            Profile</a>
+                        <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#" role="menuitem">Settings</a>
+                        <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#" role="menuitem">Sign
+                            out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="pt-2 pb-3 space-y-1">
+            <a class="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Dashboard</a>
+
+            <!-- Products with mobile submenu -->
+            <div class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                <button class="mobile-submenu-toggle w-full text-left" onclick="toggleMobileSubmenu(this)">
+                    Products
+                </button>
+                <div class="mobile-submenu">
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">All Products</a>
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">Categories</a>
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">Inventory</a>
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">Add New</a>
+                </div>
+            </div>
+
+            <a class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Orders</a>
+            <a class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Customers</a>
+            <a class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Analytics</a>
+        </div>
+        <div class="pt-4 pb-3 border-t border-gray-200">
+            <div class="flex items-center px-4">
+                <div class="flex-shrink-0">
+                    <img alt=""
+                         class="h-10 w-10 rounded-full"
+                         src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                </div>
+                <div class="ml-3">
+                    <div class="text-base font-medium text-gray-800">John Doe</div>
+                    <div class="text-sm font-medium text-gray-500">john@example.com</div>
+                </div>
+            </div>
+            <div class="mt-3 space-y-1">
+                <a class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                   href="#">Your
+                    Profile</a>
+                <a class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                   href="#">Settings</a>
+                <a class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                   href="#">Sign
+                    out</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Add New Product</h1>
+        <!--        <div class="flex space-x-3">-->
+        <!--            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">-->
+        <!--                <i class="fas fa-save mr-2"></i>Save Draft-->
+        <!--            </button>-->
+        <!--            &lt;!&ndash; Nút submit chính sẽ nằm trong form &ndash;&gt;-->
+        <!--        </div>-->
+    </div>
+
+    <!-- Bọc toàn bộ nội dung form -->
+    <form id="productForm">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <input type="hidden" id="storeId" name="storeId" th:value="${storeId}">
+                    <button
+                            type="button"
+                            class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-indigo-500 text-indigo-600"
+                            data-tab="general"
+                    >
+                        <i class="fas fa-info-circle mr-2"></i>General
+                    </button>
+                    <button
+                            type="button"
+                            class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            data-tab="inventory"
+                    >
+                        <i class="fas fa-boxes mr-2"></i>Inventory
+                    </button>
+                    <button
+                            type="button"
+                            class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            data-tab="variations"
+                    >
+                        <i class="fas fa-list-ul mr-2"></i>Variations
+                    </button>
+                </nav>
+            </div>
+
+            <!-- General Tab Content -->
+            <div id="general" class="tab-content active p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Product Images Section -->
+                    <div class="md:col-span-1">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                            Product Images
+                        </h2>
+                        <!-- Main Image -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Main Image</label
+                            >
+                            <div
+                                    class="image-upload-container rounded-lg p-4 text-center cursor-pointer"
+                                    id="main-image-upload"
+                            >
+                                <input
+                                        type="file"
+                                        id="main-image-input"
+                                        name="primaryImage"
+                                        class="hidden"
+                                        accept="image/*"
+                                />
+                                <div
+                                        id="main-image-preview"
+                                        class="flex flex-col items-center justify-center"
+                                >
+                                    <i class="fas fa-camera text-4xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500">
+                                        Click to upload main product image
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Size Guide Image -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Size Guide Image</label
+                            >
+                            <div
+                                    class="image-upload-container rounded-lg p-4 text-center cursor-pointer"
+                                    id="size-guide-upload"
+                            >
+                                <input
+                                        type="file"
+                                        id="size-guide-input"
+                                        name="sizeGuideImage"
+                                        class="hidden"
+                                        accept="image/*"
+                                />
+                                <div
+                                        id="size-guide-preview"
+                                        class="flex flex-col items-center justify-center"
+                                >
+                                    <i
+                                            class="fas fa-ruler-combined text-4xl text-gray-400 mb-2"
+                                    ></i>
+                                    <p class="text-sm text-gray-500">
+                                        Click to upload size guide
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Gallery Images -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Additional Images</label
+                            >
+                            <div
+                                    class="image-upload-container rounded-lg p-4 text-center cursor-pointer"
+                                    id="gallery-upload"
+                            >
+                                <input
+                                        type="file"
+                                        id="gallery-input"
+                                        name="galleryImages"
+                                        class="hidden"
+                                        accept="image/*"
+                                        multiple
+                                />
+                                <div
+                                        id="gallery-preview"
+                                        class="flex flex-col items-center justify-center"
+                                >
+                                    <i class="fas fa-images text-4xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500">
+                                        Click to upload additional images
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                    id="gallery-thumbnails"
+                                    class="mt-3 grid grid-cols-3 gap-2"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Product Information Section -->
+                    <div class="md:col-span-2">
+                        <div class="mb-6">
+                            <label
+                                    for="product-name"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                            >Product Name</label
+                            >
+                            <input
+                                    type="text"
+                                    id="product-name"
+                                    name="productName"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    placeholder="Enter product name"
+                            />
+                        </div>
+                        <div class="mb-6">
+                            <label
+                                    for="product-description"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                            >Description</label
+                            >
+                            <input
+                                    id="product-description"
+                                    name="productDescription"
+                                    contenteditable="true"
+                                    class="w-full min-h-32"
+                                    placeholder="Enter detailed product description"
+                            />
+                        </div>
+                        <div class="mb-6">
+                            <label
+                                    for="product-short-description"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                            >Short Description</label
+                            >
+                            <input
+                                    id="product-short-description"
+                                    name="productShortDescription"
+                                    contenteditable="true"
+                                    class="w-full min-h-16"
+                                    placeholder="Enter short product description"
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label
+                                        for="regular-price"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                >Regular Price ($)</label
+                                >
+                                <input
+                                        type="number"
+                                        id="regular-price"
+                                        name="regularPrice"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                        for="sale-price"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                >Sale Price ($)</label
+                                >
+                                <input
+                                        type="number"
+                                        id="sale-price"
+                                        name="salePrice"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                />
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Categories</label
+                            >
+                            <select
+                                    id="category-dropdown"
+                                    name="category"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="" disabled selected>
+                                    Select a category
+                                </option>
+                                <option
+                                        th:each="cat : ${categories}"
+                                        th:value="${cat}"
+                                        th:text="${cat}"
+                                ></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab Content -->
+            <div id="inventory" class="tab-content p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label
+                                for="sku"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >SKU</label
+                        >
+                        <input
+                                type="text"
+                                id="sku"
+                                name="sku"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Enter SKU"
+                        />
+                    </div>
+                    <div>
+                        <label
+                                for="stock-quantity"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >Stock Quantity</label
+                        >
+                        <input
+                                type="number"
+                                id="stock-quantity"
+                                name="stockQuantity"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Enter quantity"
+                        />
+                    </div>
+                    <div>
+                        <label
+                                for="stock-status"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >Stock Status</label
+                        >
+                        <select
+                                id="stock-status"
+                                name="stockStatus"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="IN_STOCK">In stock</option>
+                            <option value="OUT_OF_STOCK">Out of stock</option>
+                            <option value="ON_BACK_ORDER">On backorder</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                                for="backorders"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >Allow Backorders?</label
+                        >
+                        <select
+                                id="backorders"
+                                name="backorders"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="no">Do not allow</option>
+                            <option value="notify">Allow, but notify customer</option>
+                            <option value="yes">Allow</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Tab Content -->
+            <div id="variations" class="tab-content p-6">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                        Product Variations
+                    </h2>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Add Variation Attributes</label
+                            >
+                            <div id="variation-attributes-container">
+                                <div class="variation-attribute mb-3">
+                                    <div class="flex items-center space-x-2">
+                                        <input
+                                                type="text"
+                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                placeholder="Attribute name (e.g. Color, Size)"
+                                        />
+                                        <input
+                                                type="text"
+                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                placeholder="Values, separated by commas"
+                                        />
+                                        <button
+                                                type="button"
+                                                class="px-3 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 remove-attribute"
+                                        >
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                    id="add-attribute-btn"
+                                    type="button"
+                                    class="mt-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                            >
+                                <i class="fas fa-plus mr-1"></i> Add Attribute
+                            </button>
+                        </div>
+
+                        <div class="mb-4">
+                            <button
+                                    id="generate-variations-btn"
+                                    type="button"
+                                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                            >
+                                <i class="fas fa-magic mr-1"></i> Generate Variations
+                            </button>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="inline-flex items-center">
+                                <input
+                                        type="checkbox"
+                                        id="set-uniform-price"
+                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                />
+                                <span class="ml-2 text-sm text-gray-700"
+                                >Set uniform price for all variations</span
+                                >
+                            </label>
+                            <div id="uniform-price-container" class="mt-2 hidden">
+                                <input
+                                        type="number"
+                                        id="uniform-price"
+                                        class="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Price"
+                                        step="0.01"
+                                />
+                                <button
+                                        id="apply-uniform-price"
+                                        type="button"
+                                        class="ml-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="variations-list-container">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-info-circle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    No variations have been generated yet. Add attributes and
+                                    click "Generate Variations" to create variations.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Input ẩn để lưu dữ liệu variations -->
+                <input type="hidden" id="variations-data" name="variationsData" />
+            </div>
+        </div>
+
+        <!-- Nút submit nằm trong form -->
+        <div class="flex justify-end mb-4">
+            <button
+                    type="submit"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+            >
+                <i class="fas fa-upload mr-2"></i>Publish
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenu.classList.toggle('hidden');
+    }
+
+    // Toggle mobile submenu
+    function toggleMobileSubmenu(button) {
+        button.classList.toggle('active');
+        const submenu = button.nextElementSibling;
+        submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+    }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const productForm = document.getElementById("productForm");
+    productForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        // Gọi cập nhật variation trước
+        updateVariationsData();
+
+        const formData = new FormData(this); // Dùng lại form gốc
+
+        // Lấy lại giá trị variations từ trường hidden
+        const variationsDataString = document.getElementById("variations-data").value;
+        formData.set("variationsData", variationsDataString); // Ghi đè đúng dữ liệu JSON
+
+        // Gửi request
+        fetch("/products", {
+            method: "POST",
+            body: formData, // Không đặt Content-Type
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("HTTP error " + response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Success:", data);
+            alert("Product created successfully!");
+        })
+        .catch(error => {
+            console.error("Error sending product:", error);
+            alert("Error sending product!");
+        });
+    });
+});
+
+    // Toggle dropdown menu
+    const userButton = document.getElementById('user-menu-button');
+    if (userButton) {
+        userButton.addEventListener('click', function () {
+            const menu = this.closest('.dropdown').querySelector('.dropdown-menu');
+            menu.classList.toggle('hidden');
+        });
+    }
+</script>
+<script>
+    // Tab switching functionality
+    document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+            document.querySelectorAll(".tab-button").forEach((btn) => {
+                btn.classList.remove("border-indigo-500", "text-indigo-600");
+                btn.classList.add("border-transparent", "text-gray-500");
+            });
+            document.querySelectorAll(".tab-content").forEach((content) => {
+                content.classList.remove("active");
+            });
+            button.classList.remove("border-transparent", "text-gray-500");
+            button.classList.add("border-indigo-500", "text-indigo-600");
+            const tabId = button.getAttribute("data-tab");
+            document.getElementById(tabId).classList.add("active");
+        });
+    });
+
+    // Image upload functionality
+    function setupImageUpload(
+        uploadElementId,
+        inputElementId,
+        previewElementId,
+        isMultiple = false
+    ) {
+        const uploadElement = document.getElementById(uploadElementId);
+        const inputElement = document.getElementById(inputElementId);
+        const previewElement = document.getElementById(previewElementId);
+
+        uploadElement.addEventListener("click", () => {
+            inputElement.click();
+        });
+
+        inputElement.addEventListener("change", (e) => {
+            if (isMultiple) {
+                handleMultipleFiles(e, previewElementId);
+            } else {
+                handleSingleFile(e, previewElement);
+            }
+        });
+    }
+
+    function handleSingleFile(e, previewElement) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewElement.innerHTML = "";
+                const img = document.createElement("img");
+                img.src = event.target.result;
+                img.classList.add("image-preview", "w-full", "h-auto", "rounded");
+                previewElement.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleMultipleFiles(e, previewElementId) {
+        const files = e.target.files;
+        const galleryThumbnails = document.getElementById("gallery-thumbnails");
+        galleryThumbnails.innerHTML = "";
+
+        if (files.length > 0) {
+            const previewElement = document.getElementById(previewElementId);
+            previewElement.innerHTML = `<p class="text-sm text-gray-500">${files.length} images selected</p>`;
+
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const thumbnail = document.createElement("div");
+                    thumbnail.classList.add("relative");
+
+                    const img = document.createElement("img");
+                    img.src = event.target.result;
+                    img.classList.add("w-full", "h-20", "object-cover", "rounded");
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.innerHTML =
+                        '<i class="fas fa-times text-white bg-red-500 rounded-full p-1 text-xs"></i>';
+                    removeBtn.classList.add("absolute", "-top-2", "-right-2");
+                    removeBtn.addEventListener("click", () => {
+                        thumbnail.remove();
+                        updateGalleryCount();
+                    });
+
+                    thumbnail.appendChild(img);
+                    thumbnail.appendChild(removeBtn);
+                    galleryThumbnails.appendChild(thumbnail);
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+    }
+
+    function updateGalleryCount() {
+        const galleryThumbnails = document.getElementById("gallery-thumbnails");
+        const previewElement = document.getElementById("gallery-preview");
+        const count = galleryThumbnails.children.length;
+
+        if (count === 0) {
+            previewElement.innerHTML = `
+          <i class="fas fa-images text-4xl text-gray-400 mb-2"></i>
+          <p class="text-sm text-gray-500">Click to upload additional images</p>
+        `;
+        } else {
+            previewElement.innerHTML = `<p class="text-sm text-gray-500">${count} images selected</p>`;
+        }
+    }
+
+    // Initialize image uploads
+    setupImageUpload(
+        "main-image-upload",
+        "main-image-input",
+        "main-image-preview"
+    );
+    setupImageUpload(
+        "size-guide-upload",
+        "size-guide-input",
+        "size-guide-preview"
+    );
+    setupImageUpload(
+        "gallery-upload",
+        "gallery-input",
+        "gallery-preview",
+        true
+    );
+
+    // Variation attribute management
+    document
+        .getElementById("add-attribute-btn")
+        .addEventListener("click", () => {
+            const container = document.getElementById(
+                "variation-attributes-container"
+            );
+            const newAttribute = document.createElement("div");
+            newAttribute.classList.add("variation-attribute", "mb-3");
+            newAttribute.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Attribute name (e.g. Color, Size)">
+          <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Values, separated by commas">
+          <button type="button" class="px-3 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 remove-attribute">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+            container.appendChild(newAttribute);
+
+            newAttribute
+                .querySelector(".remove-attribute")
+                .addEventListener("click", () => {
+                    container.removeChild(newAttribute);
+                });
+        });
+
+    // Generate variations
+    document
+        .getElementById("generate-variations-btn")
+        .addEventListener("click", generateVariations);
+
+    function generateVariations() {
+        const attributes = [];
+        const attributeElements = document.querySelectorAll(
+            ".variation-attribute"
+        );
+
+        attributeElements.forEach((element) => {
+            const nameInput = element.querySelector("input:first-of-type");
+            const valuesInput = element.querySelector("input:last-of-type");
+
+            if (nameInput.value && valuesInput.value) {
+                const values = valuesInput.value
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter((v) => v);
+                if (values.length > 0) {
+                    attributes.push({
+                        name: nameInput.value,
+                        values: values,
+                    });
+                }
+            }
+        });
+
+        if (attributes.length === 0) {
+            alert("Please add at least one attribute with values");
+            return;
+        }
+
+        const variations = generateAllCombinations(attributes);
+        displayVariations(variations, attributes);
+    }
+
+    function generateAllCombinations(
+        attributes,
+        index = 0,
+        current = {},
+        result = []
+    ) {
+        if (index === attributes.length) {
+            result.push({ ...current });
+            return;
+        }
+
+        const attribute = attributes[index];
+        for (const value of attribute.values) {
+            current[attribute.name] = value;
+            generateAllCombinations(attributes, index + 1, current, result);
+        }
+
+        return result;
+    }
+
+    function displayVariations(variations, attributes) {
+        const container = document.getElementById("variations-list-container");
+
+        if (variations.length === 0) {
+            container.innerHTML = `
+      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <i class="fas fa-info-circle text-yellow-400"></i>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-yellow-700">
+              No variations could be generated with the provided attributes.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+            document.getElementById("variations-data").value = "";
+            return;
+        }
+
+        let html = `
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            ${attributes
+            .map(
+                (attr) =>
+                    `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${attr.name}</th>`
+            )
+            .join("")}
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+    `;
+
+        variations.forEach((variation, i) => {
+            html += `
+      <tr class="variation-row" data-index="${i}">
+        ${attributes
+                .map(
+                    (attr) =>
+                        `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                            variation[attr.name]
+                        }</td>`
+                )
+                .join("")}
+        <td class="px-6 py-4 whitespace-nowrap">
+          <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 variation-price" placeholder="0.00" step="0.01" value="${
+                variation.price || "0.00"
+            }">
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 variation-stock" placeholder="0" value="${
+                variation.stock || "0"
+            }">
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <button type="button" class="text-red-600 hover:text-red-900 remove-variation">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+        });
+
+        html += `
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4 text-sm text-gray-500">
+      ${variations.length} variations generated
+    </div>
+  `;
+
+        container.innerHTML = html;
+
+        // Thêm sự kiện input cho các ô giá và stock
+        document.querySelectorAll(".variation-price").forEach((input) => {
+            input.addEventListener("input", () => {
+                updateVariationsData();
+            });
+        });
+
+        document.querySelectorAll(".variation-stock").forEach((input) => {
+            input.addEventListener("input", () => {
+                updateVariationsData();
+            });
+        });
+
+        // Xử lý sự kiện xóa variation
+        document.querySelectorAll(".remove-variation").forEach((button) => {
+            button.addEventListener("click", (e) => {
+                const row = e.target.closest(".variation-row");
+                row.remove();
+                updateVariationsData();
+            });
+        });
+
+        // Cập nhật dữ liệu ban đầu
+        updateVariationsData();
+    }
+
+    // Cập nhật lại dữ liệu khi có thay đổi
+    function updateVariationsData() {
+        const variations = [];
+        const variationRows = document.querySelectorAll(".variation-row");
+        const attributeNames = Array.from(document.querySelectorAll("thead th"))
+            .slice(0, -3) // Bỏ qua các cột Price, Stock, Actions
+            .map(th => th.innerText); // Lấy tên các thuộc tính từ header
+
+        variationRows.forEach((row) => {
+            const attributeCells = Array.from(row.cells).slice(0, -3); // Lấy các ô chứa giá trị thuộc tính
+            const price = row.querySelector(".variation-price").value || "0.00";
+            const stock = row.querySelector(".variation-stock").value || "0";
+
+            // Tạo danh sách attributes cho variation này
+            const attributes = attributeCells.map((cell, idx) => {
+                return {
+                    name: attributeNames[idx], // Tên thuộc tính (COLOR, SIZE, ...)
+                    term: cell.innerText       // Giá trị của thuộc tính (X, Black, ...)
+                };
+            });
+
+            // Tạo object variation
+            const variation = {
+                attributes: attributes,
+                price: price,
+                stock: stock
+            };
+
+            // Thêm vào mảng variations
+            variations.push(variation);
+        });
+
+        // Lưu mảng variations trực tiếp (không cần bọc trong object "attribute")
+        document.getElementById("variations-data").value = JSON.stringify(variations);
+    }
+    // Uniform price functionality
+    document
+        .getElementById("set-uniform-price")
+        .addEventListener("change", (e) => {
+            const container = document.getElementById("uniform-price-container");
+            if (e.target.checked) {
+                container.classList.remove("hidden");
+            } else {
+                container.classList.add("hidden");
+            }
+        });
+
+    document.querySelectorAll(".variation-price").forEach((input) => {
+        input.addEventListener("input", () => {
+            updateVariationsData();
+        });
+    });
+
+    document
+        .getElementById("apply-uniform-price")
+        .addEventListener("click", () => {
+            const price = document.getElementById("uniform-price").value;
+            if (!price) {
+                alert("Please enter a price");
+                return;
+            }
+            document.querySelectorAll(".variation-price").forEach((input) => {
+                input.value = parseFloat(price).toFixed(2);
+            });
+            // Thêm dòng này để cập nhật dữ liệu variations
+            updateVariationsData();
+        });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const productForm = document.getElementById("productForm");
+        productForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            let product = {};
+            const formData = new FormData(this);
+
+            // Chuyển các trường không phải file sang object
+            for (let [key, value] of formData.entries()) {
+                if (!["primaryImage", "sizeGuideImage", "galleryImages"].includes(key)) {
+                    if (key !== "variationsData") { // Bỏ qua variationsData ở đây
+                        if (product[key]) {
+                            if (Array.isArray(product[key])) {
+                                product[key].push(value);
+                            } else {
+                                product[key] = [product[key], value];
+                            }
+                        } else {
+                            product[key] = value;
+                        }
+                    }
+                }
+            }
+// Cập nhật và thêm variationsData dưới dạng object thay vì chuỗi
+updateVariationsData();
+const variationsDataString = document.getElementById("variations-data").value;
+const variationsData = JSON.parse(variationsDataString);
+
+// Lấy dữ liệu từ các input
+const mainImageFile = document.getElementById("main-image-input").files[0];
+const sizeGuideImageFile = document.getElementById("size-guide-input").files[0];
+const galleryImageFiles = document.getElementById("gallery-input").files;
+
+// Tạo FormData để gửi multipart/form-data
+const formData = new FormData();
+formData.append("name", product.name);
+formData.append("description", product.description);
+formData.append("shortDescription", product.shortDescription);
+formData.append("regularPrice", product.regularPrice);
+formData.append("salePrice", product.salePrice);
+formData.append("category", product.category);
+formData.append("storeId", product.storeId);
+formData.append("sku", product.sku);
+formData.append("stockQuantity", product.stockQuantity);
+formData.append("stockStatus", product.stockStatus);
+formData.append("variationsData", JSON.stringify(product.variationsData));
+
+if (mainImageFile) formData.append("primaryImage", mainImageFile);
+if (sizeGuideImageFile) formData.append("sizeGuideImage", sizeGuideImageFile);
+for (let file of galleryImages) {
+  formData.append("galleryImages", file);
+}
+
+// GỬI request
+fetch("/products", {
+  method: "POST",
+  body: formData, // KHÔNG đặt Content-Type!
+});
+
+.then(data => {
+    console.log("Success:", data);
+})
+.catch(error => {
+    console.error("Error sending product:", error);
+});
+
+
+        function sendProduct(productData) {
+            fetch("/products/create-variation-product/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(productData),
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    console.log("Success:", data);
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
+        }
+    });
+    // Hàm chuyển file thành Base64
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
+</script>
+</body>
+</html>

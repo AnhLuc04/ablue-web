@@ -1,0 +1,270 @@
+<!--<!DOCTYPE html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org" lang="en">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <title>Checkout</title>-->
+
+<!--  &lt;!&ndash; PayPal JS SDK &ndash;&gt;-->
+<!--  <script src="https://www.paypal.com/sdk/js?client-id=AbCdEf1234567890GhiJklMnOpQrStUvWxYz&currency=USD"></script>-->
+
+
+<!--  &lt;!&ndash; Bootstrap &ndash;&gt;-->
+<!--  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">-->
+
+<!--  <style>-->
+<!--    body {-->
+<!--      background-color: #f9f9f9;-->
+<!--    }-->
+
+<!--    .checkout-wrapper {-->
+<!--      max-width: 1200px;-->
+<!--      margin: 40px auto;-->
+<!--    }-->
+
+<!--    .form-section {-->
+<!--      background-color: #fff;-->
+<!--      padding: 25px;-->
+<!--      border-radius: 12px;-->
+<!--      box-shadow: 0 0 15px rgba(0,0,0,0.05);-->
+<!--      margin-bottom: 25px;-->
+<!--    }-->
+
+<!--    .form-title {-->
+<!--      font-size: 1.3rem;-->
+<!--      font-weight: 600;-->
+<!--      border-bottom: 2px solid #eee;-->
+<!--      margin-bottom: 1rem;-->
+<!--      padding-bottom: 5px;-->
+<!--    }-->
+
+<!--    .paypal-button-placeholder {-->
+<!--      background-color: #ffc439;-->
+<!--      padding: 12px;-->
+<!--      text-align: center;-->
+<!--      border-radius: 8px;-->
+<!--      font-weight: bold;-->
+<!--      cursor: pointer;-->
+<!--      border: 1px solid #e0c300;-->
+<!--      transition: all 0.3s ease;-->
+<!--    }-->
+
+<!--    .paypal-button-placeholder:hover {-->
+<!--      background-color: #ffb347;-->
+<!--    }-->
+<!--  </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="container checkout-wrapper">-->
+<!--  <form th:action="@{/checkout}" method="post" th:object="${checkoutForm}">-->
+<!--    <div class="row">-->
+<!--      &lt;!&ndash; LEFT: Billing and Shipping &ndash;&gt;-->
+<!--      <div class="col-md-6">-->
+<!--        &lt;!&ndash; Billing Address &ndash;&gt;-->
+<!--        <div class="form-section">-->
+<!--          <div class="form-title">Billing Address</div>-->
+<!--          <div class="row g-3">-->
+<!--            <div class="col-md-6">-->
+<!--              <label>First Name</label>-->
+<!--              <input type="text" th:field="*{billing.firstName}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-6">-->
+<!--              <label>Last Name</label>-->
+<!--              <input type="text" th:field="*{billing.lastName}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Company</label>-->
+<!--              <input type="text" th:field="*{billing.company}" class="form-control">-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Address Line 1</label>-->
+<!--              <input type="text" th:field="*{billing.address1}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Address Line 2</label>-->
+<!--              <input type="text" th:field="*{billing.address2}" class="form-control">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>City</label>-->
+<!--              <input type="text" th:field="*{billing.city}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>State</label>-->
+<!--              <input type="text" th:field="*{billing.state}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Postcode</label>-->
+<!--              <input type="text" th:field="*{billing.postcode}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-6">-->
+<!--              <label>Country</label>-->
+<!--              <input type="text" th:field="*{billing.country}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-6">-->
+<!--              <label>Phone</label>-->
+<!--              <input type="text" th:field="*{billing.phone}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Email</label>-->
+<!--              <input type="email" th:field="*{billing.email}" class="form-control" required>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; Shipping Address &ndash;&gt;-->
+<!--        <div class="form-section">-->
+<!--          <div class="form-title">Shipping Address</div>-->
+<!--          <div class="row g-3">-->
+<!--            <div class="col-md-6">-->
+<!--              <label>First Name</label>-->
+<!--              <input type="text" th:field="*{shipping.firstName}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-6">-->
+<!--              <label>Last Name</label>-->
+<!--              <input type="text" th:field="*{shipping.lastName}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Company</label>-->
+<!--              <input type="text" th:field="*{shipping.company}" class="form-control">-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Address Line 1</label>-->
+<!--              <input type="text" th:field="*{shipping.address1}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Address Line 2</label>-->
+<!--              <input type="text" th:field="*{shipping.address2}" class="form-control">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>City</label>-->
+<!--              <input type="text" th:field="*{shipping.city}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>State</label>-->
+<!--              <input type="text" th:field="*{shipping.state}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Postcode</label>-->
+<!--              <input type="text" th:field="*{shipping.postcode}" class="form-control" required>-->
+<!--            </div>-->
+<!--            <div class="col-md-12">-->
+<!--              <label>Country</label>-->
+<!--              <input type="text" th:field="*{shipping.country}" class="form-control" required>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+
+<!--      &lt;!&ndash; RIGHT: Cart and Payment &ndash;&gt;-->
+<!--      <div class="col-md-6">-->
+<!--        &lt;!&ndash; Cart Summary &ndash;&gt;-->
+<!--        <div class="form-section">-->
+<!--          <div class="form-title">Your Order</div>-->
+<!--          <div th:each="item : ${cartItems}" class="d-flex justify-content-between border-bottom py-2">-->
+<!--            <div>-->
+<!--              <strong th:text="${item.productName}">Product</strong><br>-->
+<!--              Qty: <span th:text="${item.quantity}">1</span>-->
+<!--            </div>-->
+<!--            <div class="fw-bold" th:text="${#numbers.formatDecimal(item.totalPrice, 1, 'POINT', 2, 'COMMA')} + ' $'">25.00 $</div>-->
+<!--          </div>-->
+<!--          <div class="d-flex justify-content-between pt-3">-->
+<!--            <span>Total:</span>-->
+<!--            <span class="fw-bold fs-5 text-primary" th:text="${#numbers.formatDecimal(cartTotal, 1, 'POINT', 2, 'COMMA')} + ' $'">100.00 $</span>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; PayPal Buttons &ndash;&gt;-->
+<!--        <div class="form-section">-->
+<!--          <div class="form-title">Payment</div>-->
+<!--          <div id="paypal-button-container"></div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; Submit Button &ndash;&gt;-->
+<!--        <div class="d-grid">-->
+<!--          <button type="submit" class="btn btn-success btn-lg">Place Order</button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </form>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; PayPal Integration Script &ndash;&gt;-->
+<!--<script>-->
+<!--  paypal.Buttons({-->
+<!--    createOrder: function(data, actions) {-->
+<!--      return fetch('/api/paypal/create-order', {-->
+<!--        method: 'post',-->
+<!--        headers: {-->
+<!--          'Content-Type': 'application/json'-->
+<!--        }-->
+<!--      }).then(res => res.json())-->
+<!--        .then(order => order.id);-->
+<!--    },-->
+<!--    onApprove: function(data, actions) {-->
+<!--      return fetch(`/api/paypal/capture-order/${data.orderID}`, {-->
+<!--        method: 'post'-->
+<!--      }).then(res => res.json())-->
+<!--        .then(details => {-->
+<!--          alert('Payment completed by ' + details.payer.name.given_name);-->
+<!--          window.location.href = '/checkout/success';-->
+<!--        });-->
+<!--    }-->
+<!--  }).render('#paypal-button-container');-->
+<!--</script>-->
+
+<!--</body>-->
+<!--</html>-->
+
+
+
+
+
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Thanh toán</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-5">
+
+<h2 class="mb-4">🧾 Xác nhận đơn hàng</h2>
+
+<table class="table table-bordered text-center align-middle">
+  <thead class="table-dark">
+  <tr>
+    <th>Sản phẩm</th>
+    <th>Giá</th>
+    <th>Số lượng</th>
+    <th>Tạm tính</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="item : ${items}">
+    <td th:text="${item.productName}">Tên sản phẩm</td>
+    <td th:text="${item.price}">0</td>
+    <td th:text="${item.quantity}">1</td>
+<!--    <td th:text="${item.total}">0</td>-->
+  </tr>
+  </tbody>
+</table>
+
+<!--<div class="text-end">-->
+<!--  <h4>Tổng cộng: <span th:text="${#numbers.formatDecimal(items.stream().mapToDouble(i -> i.total).sum(), 1, 'POINT', 2, 'COMMA')}">$0.00</span></h4>-->
+<!--</div>-->
+
+<!--<h4 class="mt-4">📦 Thông tin giao hàng</h4>-->
+<!--<form action="/checkout/submit" method="post" class="mt-3">-->
+<!--  <div class="mb-3">-->
+<!--    <label for="address" class="form-label">Địa chỉ</label>-->
+<!--    <input type="text" id="address" name="address" class="form-control" required>-->
+<!--  </div>-->
+<!--  <div class="mb-3">-->
+<!--    <label for="note" class="form-label">Ghi chú (tuỳ chọn)</label>-->
+<!--    <textarea id="note" name="note" class="form-control"></textarea>-->
+<!--  </div>-->
+<!--  <button type="submit" class="btn btn-success btn-lg">✅ Xác nhận đặt hàng</button>-->
+</form>
+
+</body>
+</html>

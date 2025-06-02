@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách sản phẩm</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Danh sách sản phẩm</h2>
+
+    <!-- Bộ lọc theo Store -->
+    <form th:action="@{/}" method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label for="storeId" class="form-label">Chọn cửa hàng</label>
+            <select id="storeId" name="storeId" class="form-select">
+                <option th:value="" th:selected="${storeId == null}">Tất cả</option>
+                <option th:each="store : ${stores}"
+
+                        th:text="${store.name}">
+<!--                        th:selected="${storeId == store.id}">-->
+
+                </option>
+            </select>
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+        </div>
+    </form>
+
+
+<!--    <table class="table table-bordered">-->
+<!--        <thead>-->
+<!--        <tr>-->
+<!--            <th>ID</th>-->
+<!--            <th>Tên sản phẩm</th>-->
+<!--            <th>Danh mục</th>-->
+<!--            <th>Cửa hàng</th>-->
+<!--            <th>Ngày tạo</th>-->
+<!--            <th>Hành động</th>-->
+<!--        </tr>-->
+<!--        </thead>-->
+<!--        <tbody>-->
+<!--        <tr th:each="product : ${productPage.content}">-->
+<!--            <td th:text="${product.id}">1</td>-->
+<!--            <td th:text="${product.name}">Tên sản phẩm</td>-->
+<!--            <td th:text="${product.categories[0]?.name}">Danh mục</td>-->
+<!--            <td th:text="${product.store.name}">Tên cửa hàng</td>-->
+<!--            <td th:text="${#dates.format(product.createdAt, 'dd/MM/yyyy')}">01/01/2024</td>-->
+<!--            <td>-->
+<!--                <a th:href="@{'/edit-variation-product/' + ${product.id}}" class="btn btn-sm btn-warning">Sửa</a>-->
+<!--            </td>-->
+<!--        </tr>-->
+<!--        <tr th:if="${productPage.content.isEmpty()}">-->
+<!--            <td colspan="6" class="text-center">Không có sản phẩm nào.</td>-->
+<!--        </tr>-->
+<!--        </tbody>-->
+<!--    </table>-->
+
+<!--    &lt;!&ndash; Phân trang &ndash;&gt;-->
+<!--    <nav th:if="${productPage.totalPages > 1}">-->
+<!--        <ul class="pagination">-->
+<!--            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">-->
+<!--                <a class="page-link" th:href="@{/(page=${currentPage - 1}, size=${productPage.size}, storeId=${storeId})}">Trước</a>-->
+<!--            </li>-->
+<!--            <li class="page-item"-->
+<!--                th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"-->
+<!--                th:classappend="${i == currentPage} ? 'active'">-->
+<!--                <a class="page-link" th:href="@{/(page=${i}, size=${productPage.size}, storeId=${storeId})}"-->
+<!--                   th:text="${i + 1}">1</a>-->
+<!--            </li>-->
+<!--            <li class="page-item" th:classappend="${currentPage + 1 == productPage.totalPages} ? 'disabled'">-->
+<!--                <a class="page-link" th:href="@{/(page=${currentPage + 1}, size=${productPage.size}, storeId=${storeId})}">Sau</a>-->
+<!--            </li>-->
+<!--        </ul>-->
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

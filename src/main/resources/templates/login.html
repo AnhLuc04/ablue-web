@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+<div class="bg-white shadow-lg rounded-xl p-8 w-96">
+    <h2 class="text-2xl font-semibold text-gray-700 text-center">Đăng nhập</h2>
+    <form method="post" th:action="@{/login}" class="mt-6">
+        <div class="mb-4">
+            <input type="text" name="username" placeholder="Tên đăng nhập" required
+                   class="w-full p-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
+        </div>
+        <div class="mb-4">
+            <input type="password" name="password" placeholder="Mật khẩu" required
+                   class="w-full p-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
+        </div>
+        <div class="text-red-500 text-sm" th:if="${errorMessage != null}" th:text="${errorMessage}"></div>
+        <button type="submit"
+                class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition">
+            Đăng nhập
+        </button>
+    </form>
+        <p th:if="${param.error}" style="color:red;">Invalid username or password</p>
+        <p th:if="${param.logout}" style="color:green;">You have been logged out</p>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <title>Login</title>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <style>-->
+<!--        body {-->
+<!--            font-family: Arial, sans-serif;-->
+<!--            background-color: #f2f2f2;-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            align-items: center;-->
+<!--            height: 100vh;-->
+<!--        }-->
+<!--        .login-container {-->
+<!--            background: white;-->
+<!--            padding: 20px;-->
+<!--            border-radius: 8px;-->
+<!--            box-shadow: 0px 0px 10px 0px gray;-->
+<!--        }-->
+<!--        input {-->
+<!--            width: 100%;-->
+<!--            padding: 10px;-->
+<!--            margin: 10px 0;-->
+<!--            border: 1px solid #ccc;-->
+<!--            border-radius: 5px;-->
+<!--        }-->
+<!--        button {-->
+<!--            width: 100%;-->
+<!--            padding: 10px;-->
+<!--            background-color: #007bff;-->
+<!--            border: none;-->
+<!--            color: white;-->
+<!--            cursor: pointer;-->
+<!--        }-->
+<!--        button:hover {-->
+<!--            background-color: #0056b3;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="login-container">-->
+<!--    <h2>Login</h2>-->
+<!--    <form th:action="@{/login}" method="post">-->
+<!--        <input type="text" name="username" placeholder="Username" required>-->
+<!--        <input type="password" name="password" placeholder="Password" required>-->
+<!--        <button type="submit">Login</button>-->
+<!--    </form>-->
+<!--    <p th:if="${param.error}" style="color:red;">Invalid username or password</p>-->
+<!--    <p th:if="${param.logout}" style="color:green;">You have been logged out</p>-->
+<!--</div>-->
+<!--</body>-->
+<!--</html>-->
