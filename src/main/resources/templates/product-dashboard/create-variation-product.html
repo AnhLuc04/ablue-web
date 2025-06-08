@@ -6,6 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        .error-border {
+            border-color: #dc2626 !important;
+        }
+        .image-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .attribute-value-tag {
+            display: inline-block;
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .bulk-modal {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
 
@@ -65,9 +94,16 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label for="categoryId" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <select id="categoryId" name="categoryId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <!-- FIXED: Thêm hidden input để lưu category ID -->
+                    <input type="hidden" id="categoryIdHidden" name="categoryId" value="">
+                    <input type="text" id="categoryDisplay" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Select a category" readonly required>
+                    <select id="categorySelect" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="" disabled selected>Loading categories...</option>
                     </select>
+                    <!-- Dropdown for category selection -->
+                    <div id="categoryDropdown" class="absolute z-10 hidden w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <!-- Categories will be populated here -->
+                    </div>
                 </div>
                 <div>
                     <label for="storeId" class="block text-sm font-medium text-gray-700 mb-2">Store ID</label>
@@ -87,9 +123,9 @@
             <div class="mb-6">
                 <label for="stockStatus" class="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
                 <select id="stockStatus" name="stockStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="instock">In Stock</option>
-                    <option value="outofstock">Out of Stock</option>
-                    <option value="onbackorder">On Backorder</option>
+                    <option value="IN_STOCK">In Stock</option>
+                    <option value="OUT_OF_STOCK">Out of Stock</option>
+                    <option value="ON_BACK_ORDER">On Backorder</option>
                 </select>
             </div>
 
@@ -197,173 +233,664 @@
 </div>
 
 <script>
-        // Utility Functions
-        const $ = (selector, context = document) => context.querySelector(selector);
-        const $$ = (selector, context = document) => Array.from(context.querySelectorAll(selector));
+    // Utility Functions
+    const $ = (selector, context = document) => context.querySelector(selector);
+    const $$ = (selector, context = document) => Array.from(context.querySelectorAll(selector));
 
-        // Config
-        const apiBaseUrl = 'http://localhost:8081';
-        const storeId = 1; // Extract dynamically if needed
+    // Config
+    const apiBaseUrl = 'http://localhost:8081';
+    const storeId = 1;
 
-        // Error Handling
-        const showError = (message) => {
-            $('#errorText').textContent = message;
-            $('#errorMessage').classList.remove('hidden');
-        };
-        const hideError = () => $('#errorMessage').classList.add('hidden');
+    // Global variables for categories
+    let categoriesData = [];
 
-        // Fetch Categories
-        const fetchCategories = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}/category/${storeId}/list-category/`);
-                if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
-                const categories = await response.json();
-                return categories.map(cat => ({ id: cat.id, name: cat.name }));
-            } catch (error) {
-                showError('Unable to load categories. Please try again later.');
-                console.error('Error fetching categories:', error);
+    // Error Handling
+    const showError = (message) => {
+        $('#errorText').textContent = message;
+        $('#errorMessage').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const hideError = () => $('#errorMessage').classList.add('hidden');
+
+    // Fetch Categories
+    const fetchCategories = async () => {
+        try {
+            const response = await fetch(`${apiBaseUrl}/category/${storeId}/list-category/`);
+            if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+            const categories = await response.json();
+
+            console.log('Categories response:', categories);
+
+            if (Array.isArray(categories)) {
+                categoriesData = categories.map(cat => ({
+                    id: cat.id,
+                    name: cat.name
+                }));
+                return categoriesData;
+            } else {
+                console.error('Categories response is not an array:', categories);
                 return [];
             }
-        };
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            showError('Unable to load categories. Please try again later.');
+            return [];
+        }
+    };
 
-        // Populate Categories
-        const populateCategories = async () => {
-            const categories = await fetchCategories();
-            const select = $('#categoryId');
-            select.innerHTML = '<option value="" disabled selected>Select a category</option>';
-            if (categories.length === 0) {
-                select.innerHTML = '<option value="" disabled>No categories available</option>';
-                select.disabled = true;
-                return;
+    // FIXED: Category Selection System
+    const setupCategorySelection = () => {
+        const categoryDisplay = $('#categoryDisplay');
+        const categoryDropdown = $('#categoryDropdown');
+        const categoryIdHidden = $('#categoryIdHidden');
+
+        // Show dropdown when clicking on display input
+        categoryDisplay.addEventListener('click', () => {
+            if (categoriesData.length > 0) {
+                populateCategoryDropdown();
+                categoryDropdown.classList.remove('hidden');
             }
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.id;
-                option.textContent = cat.name;
-                select.appendChild(option);
-            });
-        };
+        });
 
-        // Image Previews
-        const setupImagePreview = (inputId, previewId) => {
-            const input = $(`#${inputId}`);
-            const preview = $(`#${previewId}`);
-            input.addEventListener('change', () => {
-                preview.innerHTML = '';
-                Array.from(input.files).forEach(file => {
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!categoryDisplay.contains(e.target) && !categoryDropdown.contains(e.target)) {
+                categoryDropdown.classList.add('hidden');
+            }
+        });
+
+        // Filter categories as user types
+        categoryDisplay.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            populateCategoryDropdown(searchTerm);
+            categoryDropdown.classList.remove('hidden');
+        });
+    };
+
+    // Populate category dropdown
+    const populateCategoryDropdown = (searchTerm = '') => {
+        const categoryDropdown = $('#categoryDropdown');
+        const filteredCategories = categoriesData.filter(cat =>
+            cat.name.toLowerCase().includes(searchTerm)
+        );
+
+        categoryDropdown.innerHTML = '';
+
+        if (filteredCategories.length === 0) {
+            categoryDropdown.innerHTML = '<div class="px-4 py-2 text-gray-500">No categories found</div>';
+            return;
+        }
+
+        filteredCategories.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer';
+            div.textContent = cat.name;
+            div.dataset.categoryId = cat.id;
+            div.dataset.categoryName = cat.name;
+
+            div.addEventListener('click', () => {
+                selectCategory(cat.id, cat.name);
+            });
+
+            categoryDropdown.appendChild(div);
+        });
+    };
+
+    // FIXED: Select category function
+    const selectCategory = (categoryId, categoryName) => {
+        const categoryDisplay = $('#categoryDisplay');
+        const categoryIdHidden = $('#categoryIdHidden');
+        const categoryDropdown = $('#categoryDropdown');
+
+        // Set display value to category name
+        categoryDisplay.value = categoryName;
+
+        // IMPORTANT: Set hidden input to category ID
+        categoryIdHidden.value = categoryId;
+
+        // Hide dropdown
+        categoryDropdown.classList.add('hidden');
+
+        console.log('Selected category:', { id: categoryId, name: categoryName });
+    };
+
+    // Populate Categories (for backward compatibility)
+    const populateCategories = async () => {
+        const categories = await fetchCategories();
+        const select = $('#categorySelect');
+
+        // Clear existing options
+        select.innerHTML = '';
+
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        defaultOption.textContent = 'Select a category';
+        select.appendChild(defaultOption);
+
+        if (categories.length === 0) {
+            const noDataOption = document.createElement('option');
+            noDataOption.value = '';
+            noDataOption.disabled = true;
+            noDataOption.textContent = 'No categories available';
+            select.appendChild(noDataOption);
+            return;
+        }
+
+        // Add category options
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+        });
+
+        console.log('Categories populated:', categories);
+    };
+
+    // Image Previews
+    const setupImagePreview = (inputId, previewId) => {
+        const input = $(`#${inputId}`);
+        const preview = $(`#${previewId}`);
+
+        if (!input || !preview) return;
+
+        input.addEventListener('change', () => {
+            preview.innerHTML = '';
+            Array.from(input.files).forEach(file => {
+                if (file && file.type.startsWith('image/')) {
                     const div = document.createElement('div');
                     div.className = 'relative image-preview';
+
                     const img = document.createElement('img');
                     img.src = URL.createObjectURL(file);
+                    img.onload = () => URL.revokeObjectURL(img.src);
+
                     const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
                     removeBtn.innerHTML = '<i class="fas fa-times text-red-600"></i>';
-                    removeBtn.className = 'absolute top-0 right-0 bg-white rounded-full p-1';
-                    removeBtn.addEventListener('click', () => div.remove());
+                    removeBtn.className = 'absolute top-0 right-0 bg-white rounded-full p-1 shadow';
+                    removeBtn.addEventListener('click', () => {
+                        div.remove();
+                        const dt = new DataTransfer();
+                        Array.from(input.files).forEach(f => {
+                            if (f !== file) dt.items.add(f);
+                        });
+                        input.files = dt.files;
+                    });
+
                     div.append(img, removeBtn);
                     preview.appendChild(div);
-                });
-            });
-        };
-        setupImagePreview('primaryImage', 'primaryImagePreview');
-        setupImagePreview('sizeGuideImage', 'sizeGuideImagePreview');
-        setupImagePreview('galleryImages', 'galleryImagesPreview');
-
-        // Attributes Management
-        const bindAttributeEvents = (entry) => {
-            const valuesInput = entry.querySelector('.attribute-values');
-            const valuesContainer = entry.querySelector('.attribute-values-container');
-
-            const updateValues = () => {
-                const values = valuesInput.value.split(',').map(v => v.trim()).filter(v => v);
-                valuesContainer.innerHTML = '';
-                values.forEach(value => {
-                    const tag = document.createElement('span');
-                    tag.className = 'attribute-value-tag';
-                    tag.innerHTML = `${value} <button type="button" class="remove-value text-red-600 hover:text-red-800"><i class="fas fa-times"></i></button>`;
-                    tag.querySelector('.remove-value').addEventListener('click', () => {
-                        const newValues = values.filter(v => v !== value);
-                        valuesInput.value = newValues.join(', ');
-                        updateValues();
-                    });
-                    valuesContainer.appendChild(tag);
-                });
-            };
-
-            valuesInput.addEventListener('input', updateValues);
-
-            entry.querySelector('.remove-attribute').addEventListener('click', () => {
-                if ($$('.attribute-entry').length > 1) {
-                    entry.parentNode.removeChild(entry);
                 }
             });
+        });
+    };
+
+    // Setup image previews
+    setupImagePreview('primaryImage', 'primaryImagePreview');
+    setupImagePreview('sizeGuideImage', 'sizeGuideImagePreview');
+    setupImagePreview('galleryImages', 'galleryImagesPreview');
+
+    // Attributes Management
+    const bindAttributeEvents = (entry) => {
+        const valuesInput = entry.querySelector('.attribute-values');
+        const valuesContainer = entry.querySelector('.attribute-values-container');
+        const removeBtn = entry.querySelector('.remove-attribute');
+
+        const updateValues = () => {
+            const values = valuesInput.value.split(',').map(v => v.trim()).filter(v => v);
+            valuesContainer.innerHTML = '';
+            values.forEach(value => {
+                const tag = document.createElement('span');
+                tag.className = 'attribute-value-tag';
+                tag.innerHTML = `${value} <button type="button" class="remove-value text-red-600 hover:text-red-800 ml-1"><i class="fas fa-times"></i></button>`;
+
+                tag.querySelector('.remove-value').addEventListener('click', () => {
+                    const newValues = values.filter(v => v !== value);
+                    valuesInput.value = newValues.join(', ');
+                    updateValues();
+                });
+
+                valuesContainer.appendChild(tag);
+            });
         };
 
-        const addAttributeEntry = () => {
-            const container = $('#attributesContainer');
-            const entry = document.createElement('div');
-            entry.className = 'attribute-entry border p-4 rounded-md bg-white';
-            entry.innerHTML = `
-                <div class="flex items-center gap-4 mb-2">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Attribute Name</label>
-                        <input type="text" class="attribute-name w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Color">
-                    </div>
-                    <button type="button" class="remove-attribute text-red-600 hover:text-red-800 mt-4">
-                        <i class="fas fa-trash"></i>
-                    </button>
+        valuesInput.addEventListener('input', updateValues);
+
+        removeBtn.addEventListener('click', () => {
+            const entries = $$('.attribute-entry');
+            if (entries.length > 1) {
+                entry.remove();
+            } else {
+                showError('At least one attribute entry is required.');
+            }
+        });
+    };
+
+    const addAttributeEntry = () => {
+        const container = $('#attributesContainer');
+        const entry = document.createElement('div');
+        entry.className = 'attribute-entry border p-4 rounded-md bg-white';
+        entry.innerHTML = `
+            <div class="flex items-center gap-4 mb-2">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Attribute Name</label>
+                    <input type="text" class="attribute-name w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Color">
                 </div>
-                <div class="mb-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Values (comma-separated)</label>
-                    <input type="text" class="attribute-values w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Red, Blue, Green">
-                </div>
-                <div class="attribute-values-container"></div>
-            `;
-            container.appendChild(entry);
-            bindAttributeEvents(entry);
-        };
+                <button type="button" class="remove-attribute text-red-600 hover:text-red-800 mt-4">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Values (comma-separated)</label>
+                <input type="text" class="attribute-values w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Red, Blue, Green">
+            </div>
+            <div class="attribute-values-container"></div>
+        `;
+        container.appendChild(entry);
+        bindAttributeEvents(entry);
+    };
 
-        $('#addAttribute').addEventListener('click', addAttributeEntry);
-        $$('.attribute-entry').forEach(bindAttributeEvents); // Bind events to initial entry
+    // Bind events to initial attribute entry
+    $$('.attribute-entry').forEach(bindAttributeEvents);
 
-        // Generate Variations
-        const generateVariations = () => {
-            const attributes = $$('.attribute-entry').map(entry => {
-                const name = entry.querySelector('.attribute-name').value.trim();
-                const values = entry.querySelector('.attribute-values').value.split(',').map(v => v.trim()).filter(v => v);
-                return name && values.length ? { name, values } : null;
-            }).filter(attr => attr);
+    $('#addAttribute').addEventListener('click', addAttributeEntry);
 
-            if (attributes.length === 0) {
-                alert('Please add at least one attribute with values.');
+    // Generate Variations
+    const generateVariations = () => {
+        const attributes = $$('.attribute-entry').map(entry => {
+            const name = entry.querySelector('.attribute-name').value.trim();
+            const values = entry.querySelector('.attribute-values').value.split(',').map(v => v.trim()).filter(v => v);
+            return name && values.length ? { name, values } : null;
+        }).filter(attr => attr);
+
+        if (attributes.length === 0) {
+            showError('Please add at least one attribute with values.');
+            return;
+        }
+
+        const variations = generateCombinations(attributes);
+        renderVariations(variations, attributes);
+    };
+
+    const generateCombinations = (attributes) => {
+        const results = [];
+        const combine = (index, current) => {
+            if (index === attributes.length) {
+                results.push({ ...current });
                 return;
             }
-
-            const variations = generateCombinations(attributes);
-            renderVariations(variations, attributes);
+            const attr = attributes[index];
+            attr.values.forEach(value => {
+                current[attr.name] = value;
+                combine(index + 1, { ...current });
+            });
         };
+        combine(0, {});
+        return results;
+    };
 
-        const generateCombinations = (attributes) => {
-            const results = [];
-            const combine = (index, current) => {
-                if (index === attributes.length) {
-                    results.push({ ...current });
-                    return;
-                }
-                const attr = attributes[index];
-                attr.values.forEach(value => {
-                    current[attr.name] = value;
-                    combine(index + 1, { ...current });
-                });
+    // Render Variations
+    const renderVariations = (variations, attributes) => {
+        const container = $('#variationsContainer');
+        if (variations.length === 0) {
+            container.innerHTML = `
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0"><i class="fas fa-info-circle text-yellow-400"></i></div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">No variations generated. Add attributes and click "Generate Variations".</p>
+                        </div>
+                    </div>
+                </div>`;
+            return;
+        }
+
+        let html = `
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variation</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+        `;
+
+        variations.forEach((variation, index) => {
+            const variationStr = Object.entries(variation).map(([name, value]) => `${name}: ${value}`).join(', ');
+            html += `
+                <tr class="variation-row" data-index="${index}">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${variationStr}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="number" class="variation-price w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" step="0.01" placeholder="Price">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="number" class="variation-stock w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Stock">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button type="button" class="remove-variation text-red-600 hover:text-red-900 mr-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 text-sm text-gray-500">${variations.length} variations generated</div>`;
+
+        container.innerHTML = html;
+
+        // Bind events to variation inputs
+        $$('.variation-price, .variation-stock').forEach(input => {
+            input.addEventListener('input', updateVariationsData);
+        });
+
+        $$('.remove-variation').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.target.closest('.variation-row').remove();
+                reindexVariations();
+                updateVariationsData();
+            });
+        });
+
+        updateVariationsData();
+    };
+
+    const reindexVariations = () => {
+        $$('.variation-row').forEach((row, index) => {
+            row.dataset.index = index;
+        });
+    };
+
+    const updateVariationsData = () => {
+        const variations = $$('.variation-row').map(row => {
+            const index = row.dataset.index;
+            const attributesText = row.querySelector('td').textContent.trim();
+            const attributes = attributesText.split(', ').map(attr => {
+                const [name, term] = attr.split(': ');
+                return { name: name.trim(), term: term.trim() };
+            });
+            const price = row.querySelector('.variation-price').value || null;
+            const stock = row.querySelector('.variation-stock').value || null;
+            return {
+                attributes,
+                price: price ? parseFloat(price) : null,
+                stock: stock ? parseInt(stock) : null
             };
-            combine(0, {});
-            return results;
+        });
+        return variations;
+    };
+
+    $('#generateVariations').addEventListener('click', generateVariations);
+
+    // Bulk Edit Modal
+    const showBulkEditModal = () => {
+        const attributes = $$('.attribute-entry').map(entry => {
+            const name = entry.querySelector('.attribute-name').value.trim();
+            const values = entry.querySelector('.attribute-values').value.split(',').map(v => v.trim()).filter(v => v);
+            return name && values.length ? { name, values } : null;
+        }).filter(attr => attr);
+
+        if (attributes.length === 0) {
+            showError('Please add attributes and generate variations first.');
+            return;
+        }
+
+        const filterContainer = $('#bulkFilterAttributes');
+        filterContainer.innerHTML = '';
+        attributes.forEach(attr => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+            div.innerHTML = `
+                <label class="text-sm font-medium text-gray-700 w-20">${attr.name}</label>
+                <select class="filter-value flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-name="${attr.name}">
+                    <option value="all">All</option>
+                    ${attr.values.map(val => `<option value="${val}">${val}</option>`).join('')}
+                </select>
+            `;
+            filterContainer.appendChild(div);
+        });
+
+        $('#bulkEditModal').classList.remove('hidden');
+    };
+
+    $('#bulkEditBtn').addEventListener('click', showBulkEditModal);
+    $('#cancelBulkEdit').addEventListener('click', () => {
+        $('#bulkEditModal').classList.add('hidden');
+        $('#bulkPrice').value = '';
+        $('#bulkStock').value = '';
+    });
+
+    $('#applyBulkEdit').addEventListener('click', () => {
+        const price = $('#bulkPrice').value || null;
+        const stock = $('#bulkStock').value || null;
+
+        if (!price && !stock) {
+            showError('Please enter a price or stock quantity to apply.');
+            return;
+        }
+
+        const filters = $$('.filter-value').map(select => ({
+            name: select.dataset.name,
+            value: select.value
+        }));
+
+        $$('.variation-row').forEach(row => {
+            const attributesText = row.querySelector('td').textContent.trim();
+            const attributes = attributesText.split(', ').map(attr => {
+                const [name, term] = attr.split(': ');
+                return { name: name.trim(), term: term.trim() };
+            });
+
+            const matchesFilter = filters.every(filter => {
+                if (filter.value === 'all') return true;
+                const attr = attributes.find(a => a.name === filter.name);
+                return attr && attr.term === filter.value;
+            });
+
+            if (matchesFilter) {
+                if (price) row.querySelector('.variation-price').value = parseFloat(price).toFixed(2);
+                if (stock) row.querySelector('.variation-stock').value = stock;
+            }
+        });
+
+        updateVariationsData();
+        $('#bulkEditModal').classList.add('hidden');
+        $('#bulkPrice').value = '';
+        $('#bulkStock').value = '';
+    });
+
+    // Form Validation
+    const validateForm = (formData) => {
+        const errors = [];
+
+        // Required fields validation
+        const requiredFields = {
+            'name': 'Product name is required',
+            'categoryId': 'Please select a category',
+            'regularPrice': 'Regular price is required',
+            'sku': 'SKU is required',
+            'stockQuantity': 'Stock quantity is required'
         };
 
-        // Render Variations
-        const renderVariations = (variations, attributes) => {
-            const container = $('#variationsContainer');
-            if (variations.length === 0) {
-                container.innerHTML = `
+        for (const [field, message] of Object.entries(requiredFields)) {
+            const value = formData.get(field);
+            if (!value || value.toString().trim() === '') {
+                errors.push(message);
+            }
+        }
+
+        // Price validation
+        const regularPrice = parseFloat(formData.get('regularPrice'));
+        const salePrice = formData.get('salePrice') ? parseFloat(formData.get('salePrice')) : null;
+
+        if (regularPrice && regularPrice <= 0) {
+            errors.push('Regular price must be greater than 0');
+        }
+
+        if (salePrice && salePrice <= 0) {
+            errors.push('Sale price must be greater than 0');
+        }
+
+        if (salePrice && regularPrice && salePrice >= regularPrice) {
+            errors.push('Sale price must be less than regular price');
+        }
+
+        // Stock validation
+        const stockQuantity = parseInt(formData.get('stockQuantity'));
+        if (stockQuantity && stockQuantity < 0) {
+            errors.push('Stock quantity cannot be negative');
+        }
+
+        return errors;
+    };
+
+    // FIXED: Form Submission
+    $('#productForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideError();
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        // IMPORTANT: Get categoryId from hidden input
+        const categoryId = $('#categoryIdHidden').value;
+
+        console.log('Form data before validation:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+        console.log('Category ID from hidden input:', categoryId);
+
+        // Validate form
+        const validationErrors = validateForm(formData);
+        if (validationErrors.length > 0) {
+            showError(validationErrors.join('. '));
+            return;
+        }
+
+        // Check if category is selected
+        if (!categoryId || categoryId === '') {
+            showError('Please select a category');
+            return;
+        }
+
+        // Get variations data
+        const variationsData = updateVariationsData();
+
+        // Prepare JSON data with correct categoryId
+        const jsonData = {
+            name: formData.get('name'),
+            description: formData.get('description') || null,
+            shortDescription: formData.get('shortDescription') || null,
+            regularPrice: parseFloat(formData.get('regularPrice')),
+            salePrice: formData.get('salePrice') ? parseFloat(formData.get('salePrice')) : null,
+            categoryId: parseInt(categoryId), // Use categoryId from hidden input
+            storeId: parseInt(formData.get('storeId')),
+            sku: formData.get('sku'),
+            stockQuantity: parseInt(formData.get('stockQuantity')),
+            stockStatus: formData.get('stockStatus'),
+            variationsData: variationsData
+        };
+
+        console.log('JSON data to send:', jsonData);
+
+        // Prepare API FormData
+        const apiFormData = new FormData();
+
+        // Append basic data
+        for (const key in jsonData) {
+            if (key === 'variationsData') continue;
+            if (jsonData[key] !== null && jsonData[key] !== undefined) {
+                apiFormData.append(key, jsonData[key]);
+            }
+        }
+
+        // Append variations data with proper structure
+        jsonData.variationsData.forEach((variation, i) => {
+            variation.attributes.forEach((attr, j) => {
+                apiFormData.append(`variationsData[${i}].attributes[${j}].name`, attr.name);
+                apiFormData.append(`variationsData[${i}].attributes[${j}].term`, attr.term);
+            });
+            if (variation.price !== null && variation.price !== undefined) {
+                apiFormData.append(`variationsData[${i}].price`, variation.price);
+            }
+            if (variation.stock !== null && variation.stock !== undefined) {
+                apiFormData.append(`variationsData[${i}].stock`, variation.stock);
+            }
+        });
+
+        // Append files with correct field names
+        const primaryImages = formData.getAll('primaryImage');
+        if (primaryImages.length > 0) {
+            primaryImages.forEach(file => {
+                if (file && file.size > 0) {
+                    apiFormData.append('primaryImage', file);
+                }
+            });
+        }
+
+        const sizeGuideImages = formData.getAll('sizeGuideImage');
+        if (sizeGuideImages.length > 0) {
+            sizeGuideImages.forEach(file => {
+                if (file && file.size > 0) {
+                    apiFormData.append('sizeGuideImage', file);
+                }
+            });
+        }
+
+        const galleryImages = formData.getAll('galleryImages');
+        if (galleryImages.length > 0) {
+            galleryImages.forEach(file => {
+                if (file && file.size > 0) {
+                    apiFormData.append('galleryImages', file);
+                }
+            });
+        }
+
+        // Debug: Log FormData contents
+        console.log('Final FormData to send:');
+        for (let [key, value] of apiFormData.entries()) {
+            console.log(key, value);
+        }
+
+        try {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating...';
+
+            const response = await fetch(`${apiBaseUrl}/products/create-variation-product/`, {
+                method: 'POST',
+                body: apiFormData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert('Product created successfully!');
+
+                // Reset form
+                form.reset();
+                $('#categoryDisplay').value = '';
+                $('#categoryIdHidden').value = '';
+                $('#primaryImagePreview').innerHTML = '';
+                $('#sizeGuideImagePreview').innerHTML = '';
+                $('#galleryImagesPreview').innerHTML = '';
+
+                // Reset attributes
+                $('#attributesContainer').innerHTML = '';
+                addAttributeEntry();
+
+                // Reset variations
+                $('#variationsContainer').innerHTML = `
                     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                         <div class="flex">
                             <div class="flex-shrink-0"><i class="fas fa-info-circle text-yellow-400"></i></div>
@@ -372,261 +899,31 @@
                             </div>
                         </div>
                     </div>`;
-                return;
+
+                // Reload categories
+                await populateCategories();
+
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Server error response:', errorData);
+                showError(errorData.message || `Error creating product: ${response.status} ${response.statusText}`);
             }
-
-            let html = `
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variation</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            variations.forEach((variation, index) => {
-                const variationStr = Object.entries(variation).map(([name, value]) => `${name}: ${value}`).join(', ');
-                html += `
-                    <tr class="variation-row" data-index="${index}">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${variationStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="number" class="variation-price w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" step="0.01" placeholder="Price">
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="number" class="variation-stock w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Stock">
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button type="button" class="remove-variation text-red-600 hover:text-red-900 mr-2">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-            });
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-4 text-sm text-gray-500">${variations.length} variations generated</div>`;
-            container.innerHTML = html;
-
-            $$('.variation-price, .variation-stock').forEach(input => {
-                input.addEventListener('input', updateVariationsData);
-            });
-            $$('.remove-variation').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.target.closest('.variation-row').remove();
-                    reindexVariations();
-                    updateVariationsData();
-                });
-            });
-            updateVariationsData();
-        };
-
-        const reindexVariations = () => {
-            $$('.variation-row').forEach((row, index) => {
-                row.dataset.index = index;
-            });
-        };
-
-        const updateVariationsData = () => {
-            const variations = $$('.variation-row').map(row => {
-                const index = row.dataset.index;
-                const attributes = Array.from(row.querySelector('td').textContent.split(', ')).map(attr => {
-                    const [name, term] = attr.split(': ');
-                    return { name, term };
-                });
-                const price = row.querySelector('.variation-price').value || null;
-                const stock = row.querySelector('.variation-stock').value || null;
-                return { attributes, price: price ? parseFloat(price) : null, stock: stock ? parseInt(stock) : null };
-            });
-            return variations;
-        };
-
-        $('#generateVariations').addEventListener('click', generateVariations);
-
-        // Bulk Edit Modal
-        const showBulkEditModal = () => {
-            const attributes = $$('.attribute-entry').map(entry => {
-                const name = entry.querySelector('.attribute-name').value.trim();
-                const values = entry.querySelector('.attribute-values').value.split(',').map(v => v.trim()).filter(v => v);
-                return name && values.length ? { name, values } : null;
-            }).filter(attr => attr);
-
-            if (attributes.length === 0) {
-                alert('Please add attributes and generate variations first.');
-                return;
-            }
-
-            const filterContainer = $('#bulkFilterAttributes');
-            filterContainer.innerHTML = '';
-            attributes.forEach(attr => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-2';
-                div.innerHTML = `
-                    <label class="text-sm font-medium text-gray-700">${attr.name}</label>
-                    <select class="filter-value w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-name="${attr.name}">
-                        <option value="all">All</option>
-                        ${attr.values.map(val => `<option value="${val}">${val}</option>`).join('')}
-                    </select>
-                `;
-                filterContainer.appendChild(div);
-            });
-
-            $('#bulkEditModal').classList.remove('hidden');
-        };
-
-        $('#bulkEditBtn').addEventListener('click', showBulkEditModal);
-        $('#cancelBulkEdit').addEventListener('click', () => $('#bulkEditModal').classList.add('hidden'));
-        $('#applyBulkEdit').addEventListener('click', () => {
-            const price = $('#bulkPrice').value || null;
-            const stock = $('#bulkStock').value || null;
-            if (!price && !stock) {
-                alert('Please enter a price or stock quantity to apply.');
-                return;
-            }
-
-            const filters = $$('.filter-value').map(select => ({
-                name: select.dataset.name,
-                value: select.value
-            }));
-
-            $$('.variation-row').forEach(row => {
-                const attributes = Array.from(row.querySelector('td').textContent.split(', ')).map(attr => {
-                    const [name, term] = attr.split(': ');
-                    return { name, term };
-                });
-                const matchesFilter = filters.every(filter => {
-                    if (filter.value === 'all') return true;
-                    const attr = attributes.find(a => a.name === filter.name);
-                    return attr && attr.term === filter.value;
-                });
-                if (matchesFilter) {
-                    if (price) row.querySelector('.variation-price').value = parseFloat(price).toFixed(2);
-                    if (stock) row.querySelector('.variation-stock').value = stock;
-                }
-            });
-
-            updateVariationsData();
-            $('#bulkEditModal').classList.add('hidden');
-            $('#bulkPrice').value = '';
-            $('#bulkStock').value = '';
-        });
-
-        // Form Submission
-        $('#productForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const requiredFields = $$('[required]', form);
-            let isValid = true;
-
-            requiredFields.forEach(field => {
-                if (!field.value) {
-                    field.classList.add('error-border');
-                    isValid = false;
-                } else {
-                    field.classList.remove('error-border');
-                }
-            });
-
-            if (!isValid) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-
-            const formData = new FormData(form);
-            const variationsData = updateVariationsData();
-            const jsonData = {
-                name: formData.get('name'),
-                description: formData.get('description') || null,
-                shortDescription: formData.get('shortDescription') || null,
-                regularPrice: parseFloat(formData.get('regularPrice')),
-                salePrice: formData.get('salePrice') ? parseFloat(formData.get('salePrice')) : null,
-                categoryId: parseInt(formData.get('categoryId')),
-                storeId: parseInt(formData.get('storeId')),
-                sku: formData.get('sku'),
-                stockQuantity: parseInt(formData.get('stockQuantity')),
-                stockStatus: formData.get('stockStatus'),
-                variationsData: variationsData
-            };
-
-            const apiFormData = new FormData();
-
-for (const key in jsonData) {
-    if (key === 'variationsData') continue; // Tách riêng xử lý phần này
-    if (jsonData[key] !== null && jsonData[key] !== undefined) {
-        apiFormData.append(key, jsonData[key]);
-    }
-}
-
-// ✨ Append variationsData như mảng phân cấp
-jsonData.variationsData.forEach((variation, i) => {
-    variation.attributes.forEach((attr, j) => {
-        apiFormData.append(`variationsData[${i}].attributes[${j}].name`, attr.name);
-        apiFormData.append(`variationsData[${i}].attributes[${j}].term`, attr.term);
+        } catch (error) {
+            console.error('Network error:', error);
+            showError('Network error. Please check your connection and try again.');
+        } finally {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-upload mr-2"></i> Create Product';
+        }
     });
-    if (variation.price != null) {
-        apiFormData.append(`variationsData[${i}].price`, variation.price);
-    }
-    if (variation.stock != null) {
-        apiFormData.append(`variationsData[${i}].stock`, variation.stock);
-    }
-});
 
-
-            if (formData.get('primaryImage')) {
-                Array.from(formData.getAll('primaryImage')).forEach(file => {
-                    if (file.size) apiFormData.append('primaryImage', file);
-                });
-            }
-            if (formData.get('sizeGuideImage')) {
-                Array.from(formData.getAll('sizeGuideImage')).forEach(file => {
-                    if (file.size) apiFormData.append('file', file);
-                });
-            }
-            if (formData.getAll('galleryImages')) {
-                formData.getAll('galleryImages').forEach(file => {
-                    if (file.size) apiFormData.append('galleryImage', file);
-                });
-            }
-
-            try {
-                const response = await fetch(`${apiBaseUrl}/products/create-variation-product/`, {
-                    method: 'POST',
-                    body: apiFormData
-                });
-                if (response.ok) {
-                    alert('Product created successfully!');
-                    form.reset();
-                    $('#primaryImagePreview').innerHTML = '';
-                    $('#sizeGuideImagePreview').innerHTML = '';
-                    $('#galleryImagesPreview').innerHTML = '';
-                    $('#attributesContainer').innerHTML = '';
-                    addAttributeEntry();
-                    $('#variationsContainer').innerHTML = `
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <div class="flex">
-                                <div class="flex-shrink-0"><i class="fas fa-info-circle text-yellow-400"></i></div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">No variations generated. Add attributes and click "Generate Variations".</p>
-                                </div>
-                            </div>
-                        </div>`;
-                    populateCategories(); // Reload categories after reset
-                } else {
-                    alert('Error creating product.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error creating product.');
-            }
-        });
-
-        // Initialize
-        populateCategories();
-    </script>
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+        await populateCategories();
+        setupCategorySelection();
+        hideError();
+    });
+</script>
 </body>
 </html>

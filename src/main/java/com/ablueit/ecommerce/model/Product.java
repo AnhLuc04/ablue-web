@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -110,5 +111,12 @@ public class Product extends AuditEntity<Long> {
 
     public Product(Long id) {
         this.id = id;
+    }
+
+    public void setUpVariations(List<Variation> variationList) {
+        if(Objects.isNull(this.variations)) {
+            this.variations = new ArrayList<>();
+        }
+        this.variations.addAll(variationList);
     }
 }

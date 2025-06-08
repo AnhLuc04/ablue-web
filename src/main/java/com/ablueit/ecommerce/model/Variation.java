@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -77,5 +78,12 @@ public class Variation extends AuditEntity<Long> {
     Product product;
 
     @OneToMany(mappedBy = "variation", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<VariationAttribute> attributes = new ArrayList<>();
+    List<VariationAttribute> attributes;
+
+    public void setAttributes(List<VariationAttribute> variationAttributes) {
+        if(Objects.isNull(this.attributes)) {
+            this.attributes = new ArrayList<>();
+        }
+        this.attributes = new ArrayList<>(variationAttributes);
+    }
 }

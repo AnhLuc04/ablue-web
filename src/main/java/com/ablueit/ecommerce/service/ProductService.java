@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public interface ProductService {
 
-    String addVariationProduct(ProductRequest request) throws IOException;
+    ProductResponse addVariationProduct(ProductRequest request) throws IOException;
 
     ProductRequest mapToRequest(Product product);
 

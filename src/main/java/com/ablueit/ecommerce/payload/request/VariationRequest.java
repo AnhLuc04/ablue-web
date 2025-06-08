@@ -1,24 +1,14 @@
 package com.ablueit.ecommerce.payload.request;
 
-import java.io.Serializable;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-public record VariationRequest(
-        List<AttributeRequest> attributes,
-        Double price,
-        Integer stock
-) implements Serializable  {
-
-    public record AttributeRequest(
-            String name,
-            String term
-    ) {
-
-    }
-
-    public record AddToCartRequest(
-            Long variantId,
-            int quantity
-    ) {}
-
+@Data
+@NoArgsConstructor
+public class VariationRequest {
+    private List<AttributeRequest> attributes;
+    private Double price;
+    private Integer stock;
 }

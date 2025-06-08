@@ -19,10 +19,12 @@ public class ProductImage {
 
     private String url;
 
+    private String fileName;
+
     @Enumerated(EnumType.STRING)
     private ImageType imageType; // PRIMARY, SIZE_GUIDE, DEFAULT
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "product_id")
     private Product product; // Liên kết đến sản phẩm chính (nếu có)
 
