@@ -37,77 +37,6 @@ public class ProductController {
     ProductService productService;
     ProductRepository productRepository;
 
-    @GetMapping("/search")
-    public String viewProducts(
-            @RequestParam(name = "keyword", required = false, defaultValue = "") String keyword,
-            @RequestParam(name = "category", required = false, defaultValue = "") String category,
-            @RequestParam(name = "maxPrice", required = false, defaultValue = "1000") Double maxPrice,
-            @RequestParam(name = "sort", required = false, defaultValue = "default") String sort,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "20") int size,
-            Model model) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products = productService.searchProducts(keyword, category, maxPrice, sort, pageable);
-
-        model.addAttribute("products", products);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("selectedCategory", category);
-        model.addAttribute("maxPrice", maxPrice);
-        model.addAttribute("selectedSort", sort);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", products.getTotalPages());
-        model.addAttribute("size", size);
-        model.addAttribute("categories", categoriesRepository.findAll());
-
-        return "search-product-user";
-    }
-
-    @GetMapping()
-    public String listProducts(
-            @RequestParam(name = "category", defaultValue = "") String category,
-            @RequestParam(name = "sort", required = false, defaultValue = "default") String sort,
-            @RequestParam(name = "minPrice", defaultValue = "0") double minPrice,
-            @RequestParam(name = "maxPrice", defaultValue = "100000000") double maxPrice,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "12") int size,
-            Model model
-    ) {
-        Pageable pageable;
-        switch (sort) {
-            case "best_selling":
-                pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "salesCount"));
-                break;
-            case "newest":
-                pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-                break;
-            case "most_favorite":
-                pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "favoriteCount"));
-                break;
-            default:
-                pageable = PageRequest.of(page, size);
-        }
-
-        Page<Product> products;
-        if (category.isEmpty()) {
-            products = productRepository.findByPriceBetween(minPrice, maxPrice, pageable);
-        } else {
-            products = productRepository.findByCategoryNameAndPriceBetween(category, minPrice, maxPrice, pageable);
-        }
-
-        model.addAttribute("products", products);
-        model.addAttribute("categories", categoriesRepository.findAll());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", products.getTotalPages());
-        model.addAttribute("selectedCategory", category);
-        model.addAttribute("selectedSort", sort);
-        model.addAttribute("minPrice", minPrice);
-        model.addAttribute("maxPrice", maxPrice);
-        model.addAttribute("size", size);
-
-        return "product-list-user";
-    }
-
 
     @GetMapping("/{id}")
     public String viewProductList(
@@ -199,7 +128,7 @@ public class ProductController {
     public String showProduct(Model model, @PathVariable Long id) throws IOException {
         log.info("GET /show-product/{}", id);
         model.addAttribute("productId", id);
-        return "product-dashboard/show-product-user";
+        return "product-dashboard/show-product";
     }
     @GetMapping(value = "/get-product/{id}", produces = "application/json")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {

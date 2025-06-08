@@ -93,7 +93,6 @@ public class Product extends AuditEntity<Long> {
 
     @OneToMany(mappedBy = "product")
     private List<Categories> categories;
-    private int salesCount; // 👈 Số lượng bán
 
 
 //    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)

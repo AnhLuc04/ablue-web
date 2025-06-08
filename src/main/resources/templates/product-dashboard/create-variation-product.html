@@ -1,632 +1,1249 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Add / Edit Product</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Store Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background-color: #EF4444;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item-with-submenu {
+            position: relative;
+        }
+
+        .submenu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 200px;
+            background-color: white;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+            display: none;
+        }
+
+        .nav-item-with-submenu:hover .submenu {
+            display: block;
+        }
+
+        .submenu-item {
+            padding: 0.5rem 1rem;
+            color: #4b5563;
+            font-size: 0.875rem;
+            display: block;
+            transition: all 0.2s;
+        }
+
+        .submenu-item:hover {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .mobile-submenu {
+            display: none;
+            padding-left: 1rem;
+        }
+
+        .mobile-submenu-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .mobile-submenu-toggle:after {
+            content: '+';
+            font-size: 1rem;
+        }
+
+        .mobile-submenu-toggle.active:after {
+            content: '-';
+        }
+    </style>
+    <style>
+        .image-upload-container {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload-container:hover {
+            border-color: #4f46e5;
+        }
+
+        .image-preview {
+            max-height: 150px;
+            object-fit: contain;
+        }
+
+        .variation-chip {
+            transition: all 0.2s ease;
+        }
+
+        .variation-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        [contenteditable="true"] {
+            min-height: 40px;
+            border: 1px dashed #cbd5e0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- Left section - Logo and navigation -->
+            <div class="flex items-center space-x-8">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a class="flex items-center" href="#">
+                        <i class="fas fa-store text-indigo-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">StoreDash</span>
+                    </a>
+                </div>
 
-<!-- Navbar -->
-<nav class="bg-white shadow p-4">
-    <div class="container mx-auto flex justify-between items-center">
-        <a class="flex items-center gap-2 text-xl font-semibold text-indigo-600" href="#">
-            <i class="fas fa-tachometer-alt"></i> Dashboard
-        </a>
-        <div class="hidden md:flex gap-6">
-            <a href="#" class="text-gray-700 hover:text-indigo-600"><i class="fas fa-home"></i> Home</a>
-            <a href="#" class="text-gray-700 hover:text-indigo-600"><i class="fas fa-list"></i> Categories</a>
-            <a href="#" class="text-gray-700 hover:text-indigo-600"><i class="fas fa-shopping-cart"></i> Orders</a>
-            <a href="#" class="text-gray-700 hover:text-indigo-600"><i class="fas fa-box"></i> Products</a>
-            <a href="#" class="text-gray-700 hover:text-indigo-600"><i class="fas fa-tags"></i> Promotions</a>
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a class="text-indigo-600 border-b-2 border-indigo-600 px-1 py-2 text-sm font-medium" href="#">Dashboard</a>
+
+                    <!-- Products with submenu -->
+                    <div class="nav-item-with-submenu">
+                        <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium flex items-center"
+                           href="#">
+                            Products
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </a>
+                        <div class="submenu">
+                            <a class="submenu-item" href="#">All Products</a>
+                            <a class="submenu-item" href="#">Categories</a>
+                            <a class="submenu-item" href="#">Inventory</a>
+                            <a class="submenu-item" th:href="@{'/products/create-variation-product/' + ${storeId}}">Add
+                                New</a>
+                        </div>
+                    </div>
+
+                    <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium" href="#">Orders</a>
+                    <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium" href="#">Customers</a>
+                    <a class="text-gray-500 hover:text-gray-700 px-1 py-2 text-sm font-medium" href="#">Analytics</a>
+                </nav>
+            </div>
+
+            <!-- Right section - Search and user menu -->
+            <div class="flex items-center space-x-4">
+                <!-- Search -->
+                <div class="relative hidden md:block">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input class="search-input block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           placeholder="Search..."
+                           type="text">
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button aria-controls="mobile-menu"
+                            aria-expanded="false"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" onclick="toggleMobileMenu()" type="button">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Notifications -->
+                <div class="relative">
+                    <button class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 relative"
+                            type="button">
+                        <span class="sr-only">View notifications</span>
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+
+                <!-- User dropdown -->
+                <div class="relative dropdown">
+                    <button aria-expanded="false" aria-haspopup="true" class="flex items-center space-x-2 focus:outline-none"
+                            id="user-menu-button" type="button">
+                        <img alt=""
+                             class="h-8 w-8 rounded-full"
+                             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                        <span class="hidden md:inline text-sm font-medium text-gray-700">John Doe</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-500 hidden md:inline"></i>
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div aria-labelledby="user-menu-button"
+                         aria-orientation="vertical" class="dropdown-menu hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu">
+                        <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#" role="menuitem">Your
+                            Profile</a>
+                        <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#" role="menuitem">Settings</a>
+                        <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#" role="menuitem">Sign
+                            out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="pt-2 pb-3 space-y-1">
+            <a class="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Dashboard</a>
+
+            <!-- Products with mobile submenu -->
+            <div class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                <button class="mobile-submenu-toggle w-full text-left" onclick="toggleMobileSubmenu(this)">
+                    Products
+                </button>
+                <div class="mobile-submenu">
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">All Products</a>
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">Categories</a>
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">Inventory</a>
+                    <a class="block py-2 pl-4 text-gray-600 hover:text-gray-800" href="#">Add New</a>
+                </div>
+            </div>
+
+            <a class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Orders</a>
+            <a class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Customers</a>
+            <a class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+               href="#">Analytics</a>
+        </div>
+        <div class="pt-4 pb-3 border-t border-gray-200">
+            <div class="flex items-center px-4">
+                <div class="flex-shrink-0">
+                    <img alt=""
+                         class="h-10 w-10 rounded-full"
+                         src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                </div>
+                <div class="ml-3">
+                    <div class="text-base font-medium text-gray-800">John Doe</div>
+                    <div class="text-sm font-medium text-gray-500">john@example.com</div>
+                </div>
+            </div>
+            <div class="mt-3 space-y-1">
+                <a class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                   href="#">Your
+                    Profile</a>
+                <a class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                   href="#">Settings</a>
+                <a class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                   href="#">Sign
+                    out</a>
+            </div>
         </div>
     </div>
-</nav>
+</header>
 
 <div class="container mx-auto px-4 py-8 max-w-6xl">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Add New Product</h1>
-    <form id="productForm" enctype="multipart/form-data">
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <!-- Error Message -->
-            <div id="errorMessage" class="error-message hidden p-4 mb-6 rounded">
-                <div class="flex">
-                    <div class="flex-shrink-0"><i class="fas fa-exclamation-circle"></i></div>
-                    <div class="ml-3">
-                        <p id="errorText" class="text-sm"></p>
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Add New Product</h1>
+        <!--        <div class="flex space-x-3">-->
+        <!--            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">-->
+        <!--                <i class="fas fa-save mr-2"></i>Save Draft-->
+        <!--            </button>-->
+        <!--            &lt;!&ndash; Nút submit chính sẽ nằm trong form &ndash;&gt;-->
+        <!--        </div>-->
+    </div>
+
+    <!-- Bọc toàn bộ nội dung form -->
+    <form id="productForm">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <input type="hidden" id="storeId" name="storeId" th:value="${storeId}">
+                    <button
+                            type="button"
+                            class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-indigo-500 text-indigo-600"
+                            data-tab="general"
+                    >
+                        <i class="fas fa-info-circle mr-2"></i>General
+                    </button>
+                    <button
+                            type="button"
+                            class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            data-tab="inventory"
+                    >
+                        <i class="fas fa-boxes mr-2"></i>Inventory
+                    </button>
+                    <button
+                            type="button"
+                            class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            data-tab="variations"
+                    >
+                        <i class="fas fa-list-ul mr-2"></i>Variations
+                    </button>
+                </nav>
+            </div>
+
+            <!-- General Tab Content -->
+            <div id="general" class="tab-content active p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Product Images Section -->
+                    <div class="md:col-span-1">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                            Product Images
+                        </h2>
+                        <!-- Main Image -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Main Image</label
+                            >
+                            <div
+                                    class="image-upload-container rounded-lg p-4 text-center cursor-pointer"
+                                    id="main-image-upload"
+                            >
+                                <input
+                                        type="file"
+                                        id="main-image-input"
+                                        name="primaryImage"
+                                        class="hidden"
+                                        accept="image/*"
+                                />
+                                <div
+                                        id="main-image-preview"
+                                        class="flex flex-col items-center justify-center"
+                                >
+                                    <i class="fas fa-camera text-4xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500">
+                                        Click to upload main product image
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Size Guide Image -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Size Guide Image</label
+                            >
+                            <div
+                                    class="image-upload-container rounded-lg p-4 text-center cursor-pointer"
+                                    id="size-guide-upload"
+                            >
+                                <input
+                                        type="file"
+                                        id="size-guide-input"
+                                        name="sizeGuideImage"
+                                        class="hidden"
+                                        accept="image/*"
+                                />
+                                <div
+                                        id="size-guide-preview"
+                                        class="flex flex-col items-center justify-center"
+                                >
+                                    <i
+                                            class="fas fa-ruler-combined text-4xl text-gray-400 mb-2"
+                                    ></i>
+                                    <p class="text-sm text-gray-500">
+                                        Click to upload size guide
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Gallery Images -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Additional Images</label
+                            >
+                            <div
+                                    class="image-upload-container rounded-lg p-4 text-center cursor-pointer"
+                                    id="gallery-upload"
+                            >
+                                <input
+                                        type="file"
+                                        id="gallery-input"
+                                        name="galleryImages"
+                                        class="hidden"
+                                        accept="image/*"
+                                        multiple
+                                />
+                                <div
+                                        id="gallery-preview"
+                                        class="flex flex-col items-center justify-center"
+                                >
+                                    <i class="fas fa-images text-4xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500">
+                                        Click to upload additional images
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                    id="gallery-thumbnails"
+                                    class="mt-3 grid grid-cols-3 gap-2"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Product Information Section -->
+                    <div class="md:col-span-2">
+                        <div class="mb-6">
+                            <label
+                                    for="product-name"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                            >Product Name</label
+                            >
+                            <input
+                                    type="text"
+                                    id="product-name"
+                                    name="productName"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    placeholder="Enter product name"
+                            />
+                        </div>
+                        <div class="mb-6">
+                            <label
+                                    for="product-description"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                            >Description</label
+                            >
+                            <input
+                                    id="product-description"
+                                    name="productDescription"
+                                    contenteditable="true"
+                                    class="w-full min-h-32"
+                                    placeholder="Enter detailed product description"
+                            />
+                        </div>
+                        <div class="mb-6">
+                            <label
+                                    for="product-short-description"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                            >Short Description</label
+                            >
+                            <input
+                                    id="product-short-description"
+                                    name="productShortDescription"
+                                    contenteditable="true"
+                                    class="w-full min-h-16"
+                                    placeholder="Enter short product description"
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label
+                                        for="regular-price"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                >Regular Price ($)</label
+                                >
+                                <input
+                                        type="number"
+                                        id="regular-price"
+                                        name="regularPrice"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                        for="sale-price"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                >Sale Price ($)</label
+                                >
+                                <input
+                                        type="number"
+                                        id="sale-price"
+                                        name="salePrice"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                />
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Categories</label
+                            >
+                            <select
+                                    id="category-dropdown"
+                                    name="category"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="" disabled selected>
+                                    Select a category
+                                </option>
+                                <option
+                                        th:each="cat : ${categories}"
+                                        th:value="${cat}"
+                                        th:text="${cat}"
+                                ></option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Basic Product Info -->
-            <div class="mb-6">
-                <label for="productName" class="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-                <input type="text" id="productName" name="name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter product name" required>
-            </div>
-            <div class="mb-6">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea id="description" name="description" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="4" placeholder="Enter product description"></textarea>
-            </div>
-            <div class="mb-6">
-                <label for="shortDescription" class="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
-                <textarea id="shortDescription" name="shortDescription" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="2" placeholder="Enter short description"></textarea>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label for="regularPrice" class="block text-sm font-medium text-gray-700 mb-2">Regular Price ($)</label>
-                    <input type="number" id="regularPrice" name="regularPrice" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="0.00" step="0.01" required>
+            <!-- Inventory Tab Content -->
+            <div id="inventory" class="tab-content p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label
+                                for="sku"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >SKU</label
+                        >
+                        <input
+                                type="text"
+                                id="sku"
+                                name="sku"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Enter SKU"
+                        />
+                    </div>
+                    <div>
+                        <label
+                                for="stock-quantity"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >Stock Quantity</label
+                        >
+                        <input
+                                type="number"
+                                id="stock-quantity"
+                                name="stockQuantity"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Enter quantity"
+                        />
+                    </div>
+                    <div>
+                        <label
+                                for="stock-status"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >Stock Status</label
+                        >
+                        <select
+                                id="stock-status"
+                                name="stockStatus"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="IN_STOCK">In stock</option>
+                            <option value="OUT_OF_STOCK">Out of stock</option>
+                            <option value="ON_BACK_ORDER">On backorder</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                                for="backorders"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                        >Allow Backorders?</label
+                        >
+                        <select
+                                id="backorders"
+                                name="backorders"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="no">Do not allow</option>
+                            <option value="notify">Allow, but notify customer</option>
+                            <option value="yes">Allow</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label for="salePrice" class="block text-sm font-medium text-gray-700 mb-2">Sale Price ($)</label>
-                    <input type="number" id="salePrice" name="salePrice" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="0.00" step="0.01">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label for="categoryId" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <select id="categoryId" name="categoryId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                        <option value="" disabled selected>Loading categories...</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="storeId" class="block text-sm font-medium text-gray-700 mb-2">Store ID</label>
-                    <input type="number" id="storeId" name="storeId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" value="1" required readonly>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label for="sku" class="block text-sm font-medium text-gray-700 mb-2">SKU</label>
-                    <input type="text" id="sku" name="sku" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter SKU" required>
-                </div>
-                <div>
-                    <label for="stockQuantity" class="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
-                    <input type="number" id="stockQuantity" name="stockQuantity" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter quantity" required>
-                </div>
-            </div>
-            <div class="mb-6">
-                <label for="stockStatus" class="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
-                <select id="stockStatus" name="stockStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="instock">In Stock</option>
-                    <option value="outofstock">Out of Stock</option>
-                    <option value="onbackorder">On Backorder</option>
-                </select>
             </div>
 
-            <!-- Images -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Primary Image</label>
-                <input type="file" id="primaryImage" name="primaryImage" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" multiple>
-                <div id="primaryImagePreview" class="mt-2 flex flex-wrap gap-2"></div>
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Size Guide Image</label>
-                <input type="file" id="sizeGuideImage" name="sizeGuideImage" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" multiple>
-                <div id="sizeGuideImagePreview" class="mt-2 flex flex-wrap gap-2"></div>
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Gallery Images</label>
-                <input type="file" id="galleryImages" name="galleryImages" accept="image/*" multiple class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                <div id="galleryImagesPreview" class="mt-2 flex flex-wrap gap-2"></div>
-            </div>
-
-            <!-- Attributes and Variations -->
-            <div class="mb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Product Options</h2>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div id="attributesContainer" class="space-y-4">
-                        <!-- Attribute Entry -->
-                        <div class="attribute-entry border p-4 rounded-md bg-white">
-                            <div class="flex items-center gap-4 mb-2">
-                                <div class="flex-1">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Attribute Name</label>
-                                    <input type="text" class="attribute-name w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Color">
+            <!-- Variations Tab Content -->
+            <div id="variations" class="tab-content p-6">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                        Product Variations
+                    </h2>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                            >Add Variation Attributes</label
+                            >
+                            <div id="variation-attributes-container">
+                                <div class="variation-attribute mb-3">
+                                    <div class="flex items-center space-x-2">
+                                        <input
+                                                type="text"
+                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                placeholder="Attribute name (e.g. Color, Size)"
+                                        />
+                                        <input
+                                                type="text"
+                                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                placeholder="Values, separated by commas"
+                                        />
+                                        <button
+                                                type="button"
+                                                class="px-3 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 remove-attribute"
+                                        >
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <button type="button" class="remove-attribute text-red-600 hover:text-red-800 mt-4">
-                                    <i class="fas fa-trash"></i>
+                            </div>
+                            <button
+                                    id="add-attribute-btn"
+                                    type="button"
+                                    class="mt-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                            >
+                                <i class="fas fa-plus mr-1"></i> Add Attribute
+                            </button>
+                        </div>
+
+                        <div class="mb-4">
+                            <button
+                                    id="generate-variations-btn"
+                                    type="button"
+                                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                            >
+                                <i class="fas fa-magic mr-1"></i> Generate Variations
+                            </button>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="inline-flex items-center">
+                                <input
+                                        type="checkbox"
+                                        id="set-uniform-price"
+                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                />
+                                <span class="ml-2 text-sm text-gray-700"
+                                >Set uniform price for all variations</span
+                                >
+                            </label>
+                            <div id="uniform-price-container" class="mt-2 hidden">
+                                <input
+                                        type="number"
+                                        id="uniform-price"
+                                        class="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Price"
+                                        step="0.01"
+                                />
+                                <button
+                                        id="apply-uniform-price"
+                                        type="button"
+                                        class="ml-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                >
+                                    Apply
                                 </button>
                             </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Values (comma-separated)</label>
-                                <input type="text" class="attribute-values w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Red, Blue, Green">
-                            </div>
-                            <div class="attribute-values-container"></div>
                         </div>
                     </div>
-                    <button type="button" id="addAttribute" class="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
-                        <i class="fas fa-plus mr-1"></i> Add Attribute
-                    </button>
                 </div>
-            </div>
-
-            <!-- Variations -->
-            <div class="mb-6">
-                <div class="flex items-center gap-4 mb-4">
-                    <button type="button" id="generateVariations" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                        <i class="fas fa-sync mr-1"></i> Generate Variations
-                    </button>
-                    <button type="button" id="bulkEditBtn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                        <i class="fas fa-edit mr-1"></i> Bulk Edit
-                    </button>
-                </div>
-                <div id="variationsContainer">
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div id="variations-list-container">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
                         <div class="flex">
-                            <div class="flex-shrink-0"><i class="fas fa-info-circle text-yellow-400"></i></div>
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-info-circle text-yellow-400"></i>
+                            </div>
                             <div class="ml-3">
-                                <p class="text-sm text-yellow-700">No variations generated. Add attributes and click "Generate Variations".</p>
+                                <p class="text-sm text-yellow-700">
+                                    No variations have been generated yet. Add attributes and
+                                    click "Generate Variations" to create variations.
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- Input ẩn để lưu dữ liệu variations -->
+                <input type="hidden" id="variations-data" name="variationsData" />
             </div>
         </div>
 
-        <!-- Submit Button -->
+        <!-- Nút submit nằm trong form -->
         <div class="flex justify-end mb-4">
-            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-                <i class="fas fa-upload mr-2"></i> Create Product
+            <button
+                    type="submit"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+            >
+                <i class="fas fa-upload mr-2"></i>Publish
             </button>
         </div>
     </form>
-
-    <!-- Bulk Edit Modal -->
-    <div id="bulkEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl bulk-modal">
-            <h2 class="text-lg font-medium mb-4">Bulk Edit Variations</h2>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Attributes</label>
-                <div id="bulkFilterAttributes" class="space-y-2"></div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                    <input type="number" id="bulkPrice" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter price">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                    <input type="number" id="bulkStock" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter quantity">
-                </div>
-            </div>
-            <div class="flex justify-end gap-4">
-                <button type="button" id="cancelBulkEdit" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
-                <button type="button" id="applyBulkEdit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Apply</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
-        // Utility Functions
-        const $ = (selector, context = document) => context.querySelector(selector);
-        const $$ = (selector, context = document) => Array.from(context.querySelectorAll(selector));
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenu.classList.toggle('hidden');
+    }
 
-        // Config
-        const apiBaseUrl = 'http://localhost:8081';
-        const storeId = 1; // Extract dynamically if needed
+    // Toggle mobile submenu
+    function toggleMobileSubmenu(button) {
+        button.classList.toggle('active');
+        const submenu = button.nextElementSibling;
+        submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+    }
 
-        // Error Handling
-        const showError = (message) => {
-            $('#errorText').textContent = message;
-            $('#errorMessage').classList.remove('hidden');
-        };
-        const hideError = () => $('#errorMessage').classList.add('hidden');
+document.addEventListener("DOMContentLoaded", () => {
+    const productForm = document.getElementById("productForm");
+    productForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
 
-        // Fetch Categories
-        const fetchCategories = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}/category/${storeId}/list-category/`);
-                if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
-                const categories = await response.json();
-                return categories.map(cat => ({ id: cat.id, name: cat.name }));
-            } catch (error) {
-                showError('Unable to load categories. Please try again later.');
-                console.error('Error fetching categories:', error);
-                return [];
-            }
-        };
+        // Gọi cập nhật variation trước
+        updateVariationsData();
 
-        // Populate Categories
-        const populateCategories = async () => {
-            const categories = await fetchCategories();
-            const select = $('#categoryId');
-            select.innerHTML = '<option value="" disabled selected>Select a category</option>';
-            if (categories.length === 0) {
-                select.innerHTML = '<option value="" disabled>No categories available</option>';
-                select.disabled = true;
-                return;
-            }
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.id;
-                option.textContent = cat.name;
-                select.appendChild(option);
+        const formData = new FormData(this); // Dùng lại form gốc
+
+        // Lấy lại giá trị variations từ trường hidden
+        const variationsDataString = document.getElementById("variations-data").value;
+        formData.set("variationsData", variationsDataString); // Ghi đè đúng dữ liệu JSON
+
+        // Gửi request
+        fetch("/products", {
+            method: "POST",
+            body: formData, // Không đặt Content-Type
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("HTTP error " + response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Success:", data);
+            alert("Product created successfully!");
+        })
+        .catch(error => {
+            console.error("Error sending product:", error);
+            alert("Error sending product!");
+        });
+    });
+});
+
+    // Toggle dropdown menu
+    const userButton = document.getElementById('user-menu-button');
+    if (userButton) {
+        userButton.addEventListener('click', function () {
+            const menu = this.closest('.dropdown').querySelector('.dropdown-menu');
+            menu.classList.toggle('hidden');
+        });
+    }
+</script>
+<script>
+    // Tab switching functionality
+    document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+            document.querySelectorAll(".tab-button").forEach((btn) => {
+                btn.classList.remove("border-indigo-500", "text-indigo-600");
+                btn.classList.add("border-transparent", "text-gray-500");
             });
-        };
-
-        // Image Previews
-        const setupImagePreview = (inputId, previewId) => {
-            const input = $(`#${inputId}`);
-            const preview = $(`#${previewId}`);
-            input.addEventListener('change', () => {
-                preview.innerHTML = '';
-                Array.from(input.files).forEach(file => {
-                    const div = document.createElement('div');
-                    div.className = 'relative image-preview';
-                    const img = document.createElement('img');
-                    img.src = URL.createObjectURL(file);
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '<i class="fas fa-times text-red-600"></i>';
-                    removeBtn.className = 'absolute top-0 right-0 bg-white rounded-full p-1';
-                    removeBtn.addEventListener('click', () => div.remove());
-                    div.append(img, removeBtn);
-                    preview.appendChild(div);
-                });
+            document.querySelectorAll(".tab-content").forEach((content) => {
+                content.classList.remove("active");
             });
-        };
-        setupImagePreview('primaryImage', 'primaryImagePreview');
-        setupImagePreview('sizeGuideImage', 'sizeGuideImagePreview');
-        setupImagePreview('galleryImages', 'galleryImagesPreview');
+            button.classList.remove("border-transparent", "text-gray-500");
+            button.classList.add("border-indigo-500", "text-indigo-600");
+            const tabId = button.getAttribute("data-tab");
+            document.getElementById(tabId).classList.add("active");
+        });
+    });
 
-        // Attributes Management
-        const bindAttributeEvents = (entry) => {
-            const valuesInput = entry.querySelector('.attribute-values');
-            const valuesContainer = entry.querySelector('.attribute-values-container');
+    // Image upload functionality
+    function setupImageUpload(
+        uploadElementId,
+        inputElementId,
+        previewElementId,
+        isMultiple = false
+    ) {
+        const uploadElement = document.getElementById(uploadElementId);
+        const inputElement = document.getElementById(inputElementId);
+        const previewElement = document.getElementById(previewElementId);
 
-            const updateValues = () => {
-                const values = valuesInput.value.split(',').map(v => v.trim()).filter(v => v);
-                valuesContainer.innerHTML = '';
-                values.forEach(value => {
-                    const tag = document.createElement('span');
-                    tag.className = 'attribute-value-tag';
-                    tag.innerHTML = `${value} <button type="button" class="remove-value text-red-600 hover:text-red-800"><i class="fas fa-times"></i></button>`;
-                    tag.querySelector('.remove-value').addEventListener('click', () => {
-                        const newValues = values.filter(v => v !== value);
-                        valuesInput.value = newValues.join(', ');
-                        updateValues();
-                    });
-                    valuesContainer.appendChild(tag);
-                });
-            };
-
-            valuesInput.addEventListener('input', updateValues);
-
-            entry.querySelector('.remove-attribute').addEventListener('click', () => {
-                if ($$('.attribute-entry').length > 1) {
-                    entry.parentNode.removeChild(entry);
-                }
-            });
-        };
-
-        const addAttributeEntry = () => {
-            const container = $('#attributesContainer');
-            const entry = document.createElement('div');
-            entry.className = 'attribute-entry border p-4 rounded-md bg-white';
-            entry.innerHTML = `
-                <div class="flex items-center gap-4 mb-2">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Attribute Name</label>
-                        <input type="text" class="attribute-name w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Color">
-                    </div>
-                    <button type="button" class="remove-attribute text-red-600 hover:text-red-800 mt-4">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-                <div class="mb-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Values (comma-separated)</label>
-                    <input type="text" class="attribute-values w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Red, Blue, Green">
-                </div>
-                <div class="attribute-values-container"></div>
-            `;
-            container.appendChild(entry);
-            bindAttributeEvents(entry);
-        };
-
-        $('#addAttribute').addEventListener('click', addAttributeEntry);
-        $$('.attribute-entry').forEach(bindAttributeEvents); // Bind events to initial entry
-
-        // Generate Variations
-        const generateVariations = () => {
-            const attributes = $$('.attribute-entry').map(entry => {
-                const name = entry.querySelector('.attribute-name').value.trim();
-                const values = entry.querySelector('.attribute-values').value.split(',').map(v => v.trim()).filter(v => v);
-                return name && values.length ? { name, values } : null;
-            }).filter(attr => attr);
-
-            if (attributes.length === 0) {
-                alert('Please add at least one attribute with values.');
-                return;
-            }
-
-            const variations = generateCombinations(attributes);
-            renderVariations(variations, attributes);
-        };
-
-        const generateCombinations = (attributes) => {
-            const results = [];
-            const combine = (index, current) => {
-                if (index === attributes.length) {
-                    results.push({ ...current });
-                    return;
-                }
-                const attr = attributes[index];
-                attr.values.forEach(value => {
-                    current[attr.name] = value;
-                    combine(index + 1, { ...current });
-                });
-            };
-            combine(0, {});
-            return results;
-        };
-
-        // Render Variations
-        const renderVariations = (variations, attributes) => {
-            const container = $('#variationsContainer');
-            if (variations.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0"><i class="fas fa-info-circle text-yellow-400"></i></div>
-                            <div class="ml-3">
-                                <p class="text-sm text-yellow-700">No variations generated. Add attributes and click "Generate Variations".</p>
-                            </div>
-                        </div>
-                    </div>`;
-                return;
-            }
-
-            let html = `
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variation</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            variations.forEach((variation, index) => {
-                const variationStr = Object.entries(variation).map(([name, value]) => `${name}: ${value}`).join(', ');
-                html += `
-                    <tr class="variation-row" data-index="${index}">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${variationStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="number" class="variation-price w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" step="0.01" placeholder="Price">
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="number" class="variation-stock w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Stock">
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button type="button" class="remove-variation text-red-600 hover:text-red-900 mr-2">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-            });
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-4 text-sm text-gray-500">${variations.length} variations generated</div>`;
-            container.innerHTML = html;
-
-            $$('.variation-price, .variation-stock').forEach(input => {
-                input.addEventListener('input', updateVariationsData);
-            });
-            $$('.remove-variation').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.target.closest('.variation-row').remove();
-                    reindexVariations();
-                    updateVariationsData();
-                });
-            });
-            updateVariationsData();
-        };
-
-        const reindexVariations = () => {
-            $$('.variation-row').forEach((row, index) => {
-                row.dataset.index = index;
-            });
-        };
-
-        const updateVariationsData = () => {
-            const variations = $$('.variation-row').map(row => {
-                const index = row.dataset.index;
-                const attributes = Array.from(row.querySelector('td').textContent.split(', ')).map(attr => {
-                    const [name, term] = attr.split(': ');
-                    return { name, term };
-                });
-                const price = row.querySelector('.variation-price').value || null;
-                const stock = row.querySelector('.variation-stock').value || null;
-                return { attributes, price: price ? parseFloat(price) : null, stock: stock ? parseInt(stock) : null };
-            });
-            return variations;
-        };
-
-        $('#generateVariations').addEventListener('click', generateVariations);
-
-        // Bulk Edit Modal
-        const showBulkEditModal = () => {
-            const attributes = $$('.attribute-entry').map(entry => {
-                const name = entry.querySelector('.attribute-name').value.trim();
-                const values = entry.querySelector('.attribute-values').value.split(',').map(v => v.trim()).filter(v => v);
-                return name && values.length ? { name, values } : null;
-            }).filter(attr => attr);
-
-            if (attributes.length === 0) {
-                alert('Please add attributes and generate variations first.');
-                return;
-            }
-
-            const filterContainer = $('#bulkFilterAttributes');
-            filterContainer.innerHTML = '';
-            attributes.forEach(attr => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-2';
-                div.innerHTML = `
-                    <label class="text-sm font-medium text-gray-700">${attr.name}</label>
-                    <select class="filter-value w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-name="${attr.name}">
-                        <option value="all">All</option>
-                        ${attr.values.map(val => `<option value="${val}">${val}</option>`).join('')}
-                    </select>
-                `;
-                filterContainer.appendChild(div);
-            });
-
-            $('#bulkEditModal').classList.remove('hidden');
-        };
-
-        $('#bulkEditBtn').addEventListener('click', showBulkEditModal);
-        $('#cancelBulkEdit').addEventListener('click', () => $('#bulkEditModal').classList.add('hidden'));
-        $('#applyBulkEdit').addEventListener('click', () => {
-            const price = $('#bulkPrice').value || null;
-            const stock = $('#bulkStock').value || null;
-            if (!price && !stock) {
-                alert('Please enter a price or stock quantity to apply.');
-                return;
-            }
-
-            const filters = $$('.filter-value').map(select => ({
-                name: select.dataset.name,
-                value: select.value
-            }));
-
-            $$('.variation-row').forEach(row => {
-                const attributes = Array.from(row.querySelector('td').textContent.split(', ')).map(attr => {
-                    const [name, term] = attr.split(': ');
-                    return { name, term };
-                });
-                const matchesFilter = filters.every(filter => {
-                    if (filter.value === 'all') return true;
-                    const attr = attributes.find(a => a.name === filter.name);
-                    return attr && attr.term === filter.value;
-                });
-                if (matchesFilter) {
-                    if (price) row.querySelector('.variation-price').value = parseFloat(price).toFixed(2);
-                    if (stock) row.querySelector('.variation-stock').value = stock;
-                }
-            });
-
-            updateVariationsData();
-            $('#bulkEditModal').classList.add('hidden');
-            $('#bulkPrice').value = '';
-            $('#bulkStock').value = '';
+        uploadElement.addEventListener("click", () => {
+            inputElement.click();
         });
 
-        // Form Submission
-        $('#productForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const requiredFields = $$('[required]', form);
-            let isValid = true;
+        inputElement.addEventListener("change", (e) => {
+            if (isMultiple) {
+                handleMultipleFiles(e, previewElementId);
+            } else {
+                handleSingleFile(e, previewElement);
+            }
+        });
+    }
 
-            requiredFields.forEach(field => {
-                if (!field.value) {
-                    field.classList.add('error-border');
-                    isValid = false;
-                } else {
-                    field.classList.remove('error-border');
+    function handleSingleFile(e, previewElement) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewElement.innerHTML = "";
+                const img = document.createElement("img");
+                img.src = event.target.result;
+                img.classList.add("image-preview", "w-full", "h-auto", "rounded");
+                previewElement.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleMultipleFiles(e, previewElementId) {
+        const files = e.target.files;
+        const galleryThumbnails = document.getElementById("gallery-thumbnails");
+        galleryThumbnails.innerHTML = "";
+
+        if (files.length > 0) {
+            const previewElement = document.getElementById(previewElementId);
+            previewElement.innerHTML = `<p class="text-sm text-gray-500">${files.length} images selected</p>`;
+
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const thumbnail = document.createElement("div");
+                    thumbnail.classList.add("relative");
+
+                    const img = document.createElement("img");
+                    img.src = event.target.result;
+                    img.classList.add("w-full", "h-20", "object-cover", "rounded");
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.innerHTML =
+                        '<i class="fas fa-times text-white bg-red-500 rounded-full p-1 text-xs"></i>';
+                    removeBtn.classList.add("absolute", "-top-2", "-right-2");
+                    removeBtn.addEventListener("click", () => {
+                        thumbnail.remove();
+                        updateGalleryCount();
+                    });
+
+                    thumbnail.appendChild(img);
+                    thumbnail.appendChild(removeBtn);
+                    galleryThumbnails.appendChild(thumbnail);
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+    }
+
+    function updateGalleryCount() {
+        const galleryThumbnails = document.getElementById("gallery-thumbnails");
+        const previewElement = document.getElementById("gallery-preview");
+        const count = galleryThumbnails.children.length;
+
+        if (count === 0) {
+            previewElement.innerHTML = `
+          <i class="fas fa-images text-4xl text-gray-400 mb-2"></i>
+          <p class="text-sm text-gray-500">Click to upload additional images</p>
+        `;
+        } else {
+            previewElement.innerHTML = `<p class="text-sm text-gray-500">${count} images selected</p>`;
+        }
+    }
+
+    // Initialize image uploads
+    setupImageUpload(
+        "main-image-upload",
+        "main-image-input",
+        "main-image-preview"
+    );
+    setupImageUpload(
+        "size-guide-upload",
+        "size-guide-input",
+        "size-guide-preview"
+    );
+    setupImageUpload(
+        "gallery-upload",
+        "gallery-input",
+        "gallery-preview",
+        true
+    );
+
+    // Variation attribute management
+    document
+        .getElementById("add-attribute-btn")
+        .addEventListener("click", () => {
+            const container = document.getElementById(
+                "variation-attributes-container"
+            );
+            const newAttribute = document.createElement("div");
+            newAttribute.classList.add("variation-attribute", "mb-3");
+            newAttribute.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Attribute name (e.g. Color, Size)">
+          <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Values, separated by commas">
+          <button type="button" class="px-3 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 remove-attribute">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+            container.appendChild(newAttribute);
+
+            newAttribute
+                .querySelector(".remove-attribute")
+                .addEventListener("click", () => {
+                    container.removeChild(newAttribute);
+                });
+        });
+
+    // Generate variations
+    document
+        .getElementById("generate-variations-btn")
+        .addEventListener("click", generateVariations);
+
+    function generateVariations() {
+        const attributes = [];
+        const attributeElements = document.querySelectorAll(
+            ".variation-attribute"
+        );
+
+        attributeElements.forEach((element) => {
+            const nameInput = element.querySelector("input:first-of-type");
+            const valuesInput = element.querySelector("input:last-of-type");
+
+            if (nameInput.value && valuesInput.value) {
+                const values = valuesInput.value
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter((v) => v);
+                if (values.length > 0) {
+                    attributes.push({
+                        name: nameInput.value,
+                        values: values,
+                    });
                 }
+            }
+        });
+
+        if (attributes.length === 0) {
+            alert("Please add at least one attribute with values");
+            return;
+        }
+
+        const variations = generateAllCombinations(attributes);
+        displayVariations(variations, attributes);
+    }
+
+    function generateAllCombinations(
+        attributes,
+        index = 0,
+        current = {},
+        result = []
+    ) {
+        if (index === attributes.length) {
+            result.push({ ...current });
+            return;
+        }
+
+        const attribute = attributes[index];
+        for (const value of attribute.values) {
+            current[attribute.name] = value;
+            generateAllCombinations(attributes, index + 1, current, result);
+        }
+
+        return result;
+    }
+
+    function displayVariations(variations, attributes) {
+        const container = document.getElementById("variations-list-container");
+
+        if (variations.length === 0) {
+            container.innerHTML = `
+      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <i class="fas fa-info-circle text-yellow-400"></i>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-yellow-700">
+              No variations could be generated with the provided attributes.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+            document.getElementById("variations-data").value = "";
+            return;
+        }
+
+        let html = `
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            ${attributes
+            .map(
+                (attr) =>
+                    `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${attr.name}</th>`
+            )
+            .join("")}
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+    `;
+
+        variations.forEach((variation, i) => {
+            html += `
+      <tr class="variation-row" data-index="${i}">
+        ${attributes
+                .map(
+                    (attr) =>
+                        `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                            variation[attr.name]
+                        }</td>`
+                )
+                .join("")}
+        <td class="px-6 py-4 whitespace-nowrap">
+          <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 variation-price" placeholder="0.00" step="0.01" value="${
+                variation.price || "0.00"
+            }">
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 variation-stock" placeholder="0" value="${
+                variation.stock || "0"
+            }">
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <button type="button" class="text-red-600 hover:text-red-900 remove-variation">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+        });
+
+        html += `
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4 text-sm text-gray-500">
+      ${variations.length} variations generated
+    </div>
+  `;
+
+        container.innerHTML = html;
+
+        // Thêm sự kiện input cho các ô giá và stock
+        document.querySelectorAll(".variation-price").forEach((input) => {
+            input.addEventListener("input", () => {
+                updateVariationsData();
+            });
+        });
+
+        document.querySelectorAll(".variation-stock").forEach((input) => {
+            input.addEventListener("input", () => {
+                updateVariationsData();
+            });
+        });
+
+        // Xử lý sự kiện xóa variation
+        document.querySelectorAll(".remove-variation").forEach((button) => {
+            button.addEventListener("click", (e) => {
+                const row = e.target.closest(".variation-row");
+                row.remove();
+                updateVariationsData();
+            });
+        });
+
+        // Cập nhật dữ liệu ban đầu
+        updateVariationsData();
+    }
+
+    // Cập nhật lại dữ liệu khi có thay đổi
+    function updateVariationsData() {
+        const variations = [];
+        const variationRows = document.querySelectorAll(".variation-row");
+        const attributeNames = Array.from(document.querySelectorAll("thead th"))
+            .slice(0, -3) // Bỏ qua các cột Price, Stock, Actions
+            .map(th => th.innerText); // Lấy tên các thuộc tính từ header
+
+        variationRows.forEach((row) => {
+            const attributeCells = Array.from(row.cells).slice(0, -3); // Lấy các ô chứa giá trị thuộc tính
+            const price = row.querySelector(".variation-price").value || "0.00";
+            const stock = row.querySelector(".variation-stock").value || "0";
+
+            // Tạo danh sách attributes cho variation này
+            const attributes = attributeCells.map((cell, idx) => {
+                return {
+                    name: attributeNames[idx], // Tên thuộc tính (COLOR, SIZE, ...)
+                    term: cell.innerText       // Giá trị của thuộc tính (X, Black, ...)
+                };
             });
 
-            if (!isValid) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-
-            const formData = new FormData(form);
-            const variationsData = updateVariationsData();
-            const jsonData = {
-                name: formData.get('name'),
-                description: formData.get('description') || null,
-                shortDescription: formData.get('shortDescription') || null,
-                regularPrice: parseFloat(formData.get('regularPrice')),
-                salePrice: formData.get('salePrice') ? parseFloat(formData.get('salePrice')) : null,
-                categoryId: parseInt(formData.get('categoryId')),
-                storeId: parseInt(formData.get('storeId')),
-                sku: formData.get('sku'),
-                stockQuantity: parseInt(formData.get('stockQuantity')),
-                stockStatus: formData.get('stockStatus'),
-                variationsData: variationsData
+            // Tạo object variation
+            const variation = {
+                attributes: attributes,
+                price: price,
+                stock: stock
             };
 
-            const apiFormData = new FormData();
+            // Thêm vào mảng variations
+            variations.push(variation);
+        });
 
-for (const key in jsonData) {
-    if (key === 'variationsData') continue; // Tách riêng xử lý phần này
-    if (jsonData[key] !== null && jsonData[key] !== undefined) {
-        apiFormData.append(key, jsonData[key]);
+        // Lưu mảng variations trực tiếp (không cần bọc trong object "attribute")
+        document.getElementById("variations-data").value = JSON.stringify(variations);
     }
+    // Uniform price functionality
+    document
+        .getElementById("set-uniform-price")
+        .addEventListener("change", (e) => {
+            const container = document.getElementById("uniform-price-container");
+            if (e.target.checked) {
+                container.classList.remove("hidden");
+            } else {
+                container.classList.add("hidden");
+            }
+        });
+
+    document.querySelectorAll(".variation-price").forEach((input) => {
+        input.addEventListener("input", () => {
+            updateVariationsData();
+        });
+    });
+
+    document
+        .getElementById("apply-uniform-price")
+        .addEventListener("click", () => {
+            const price = document.getElementById("uniform-price").value;
+            if (!price) {
+                alert("Please enter a price");
+                return;
+            }
+            document.querySelectorAll(".variation-price").forEach((input) => {
+                input.value = parseFloat(price).toFixed(2);
+            });
+            // Thêm dòng này để cập nhật dữ liệu variations
+            updateVariationsData();
+        });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const productForm = document.getElementById("productForm");
+        productForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            let product = {};
+            const formData = new FormData(this);
+
+            // Chuyển các trường không phải file sang object
+            for (let [key, value] of formData.entries()) {
+                if (!["primaryImage", "sizeGuideImage", "galleryImages"].includes(key)) {
+                    if (key !== "variationsData") { // Bỏ qua variationsData ở đây
+                        if (product[key]) {
+                            if (Array.isArray(product[key])) {
+                                product[key].push(value);
+                            } else {
+                                product[key] = [product[key], value];
+                            }
+                        } else {
+                            product[key] = value;
+                        }
+                    }
+                }
+            }
+// Cập nhật và thêm variationsData dưới dạng object thay vì chuỗi
+updateVariationsData();
+const variationsDataString = document.getElementById("variations-data").value;
+const variationsData = JSON.parse(variationsDataString);
+
+// Lấy dữ liệu từ các input
+const mainImageFile = document.getElementById("main-image-input").files[0];
+const sizeGuideImageFile = document.getElementById("size-guide-input").files[0];
+const galleryImageFiles = document.getElementById("gallery-input").files;
+
+// Tạo FormData để gửi multipart/form-data
+const formData = new FormData();
+formData.append("name", product.name);
+formData.append("description", product.description);
+formData.append("shortDescription", product.shortDescription);
+formData.append("regularPrice", product.regularPrice);
+formData.append("salePrice", product.salePrice);
+formData.append("category", product.category);
+formData.append("storeId", product.storeId);
+formData.append("sku", product.sku);
+formData.append("stockQuantity", product.stockQuantity);
+formData.append("stockStatus", product.stockStatus);
+formData.append("variationsData", JSON.stringify(product.variationsData));
+
+if (mainImageFile) formData.append("primaryImage", mainImageFile);
+if (sizeGuideImageFile) formData.append("sizeGuideImage", sizeGuideImageFile);
+for (let file of galleryImages) {
+  formData.append("galleryImages", file);
 }
 
-// ✨ Append variationsData như mảng phân cấp
-jsonData.variationsData.forEach((variation, i) => {
-    variation.attributes.forEach((attr, j) => {
-        apiFormData.append(`variationsData[${i}].attributes[${j}].name`, attr.name);
-        apiFormData.append(`variationsData[${i}].attributes[${j}].term`, attr.term);
-    });
-    if (variation.price != null) {
-        apiFormData.append(`variationsData[${i}].price`, variation.price);
-    }
-    if (variation.stock != null) {
-        apiFormData.append(`variationsData[${i}].stock`, variation.stock);
-    }
+// GỬI request
+fetch("/products", {
+  method: "POST",
+  body: formData, // KHÔNG đặt Content-Type!
+});
+
+.then(data => {
+    console.log("Success:", data);
+})
+.catch(error => {
+    console.error("Error sending product:", error);
 });
 
 
-            if (formData.get('primaryImage')) {
-                Array.from(formData.getAll('primaryImage')).forEach(file => {
-                    if (file.size) apiFormData.append('primaryImage', file);
+        function sendProduct(productData) {
+            fetch("/products/create-variation-product/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(productData),
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    console.log("Success:", data);
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
                 });
-            }
-            if (formData.get('sizeGuideImage')) {
-                Array.from(formData.getAll('sizeGuideImage')).forEach(file => {
-                    if (file.size) apiFormData.append('file', file);
-                });
-            }
-            if (formData.getAll('galleryImages')) {
-                formData.getAll('galleryImages').forEach(file => {
-                    if (file.size) apiFormData.append('galleryImage', file);
-                });
-            }
-
-            try {
-                const response = await fetch(`${apiBaseUrl}/products/create-variation-product/`, {
-                    method: 'POST',
-                    body: apiFormData
-                });
-                if (response.ok) {
-                    alert('Product created successfully!');
-                    form.reset();
-                    $('#primaryImagePreview').innerHTML = '';
-                    $('#sizeGuideImagePreview').innerHTML = '';
-                    $('#galleryImagesPreview').innerHTML = '';
-                    $('#attributesContainer').innerHTML = '';
-                    addAttributeEntry();
-                    $('#variationsContainer').innerHTML = `
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <div class="flex">
-                                <div class="flex-shrink-0"><i class="fas fa-info-circle text-yellow-400"></i></div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">No variations generated. Add attributes and click "Generate Variations".</p>
-                                </div>
-                            </div>
-                        </div>`;
-                    populateCategories(); // Reload categories after reset
-                } else {
-                    alert('Error creating product.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error creating product.');
-            }
+        }
+    });
+    // Hàm chuyển file thành Base64
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(file);
         });
-
-        // Initialize
-        populateCategories();
-    </script>
+    }
+</script>
 </body>
 </html>

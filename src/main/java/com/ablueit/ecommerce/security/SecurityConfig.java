@@ -30,13 +30,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/login",  "/css/**", "/js/**").permitAll() // Cho phép truy cập không cần đăng nhập
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/seller/**").hasRole("SELLER")
                         .requestMatchers("/user/**").hasRole("USER")
-                        .anyRequest().permitAll() // Cho phép mọi đường dẫn khác không cần login
+                        .anyRequest().authenticated()
                 )
-
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(login -> login
                         .loginPage("/login")

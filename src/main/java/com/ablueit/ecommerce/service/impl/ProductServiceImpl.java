@@ -18,16 +18,19 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 @Service
 @RequiredArgsConstructor
 @Slf4j(topic = "PRODUCT-SERVICE")
@@ -41,6 +44,7 @@ public class ProductServiceImpl implements ProductService {
     StoreRepository storeRepository;
     VariationRepository variationRepository;
     ProductImageRepository productImageRepository;
+
 
 
     @Override
@@ -114,18 +118,6 @@ public class ProductServiceImpl implements ProductService {
         log.info("for debug");
         return "ok";
     }
-
-
-    @Override
-    public ProductRequest mapToRequest(Product product) {
-        return null;
-    }
-
-    @Override
-    public String updateVariationProduct(ProductRequest request) throws IOException {
-        return null;
-    }
-
     public List<ProductImage> saveImageFiles(String sku, List<MultipartFile> files, List<ImageType> types, Product product) throws IOException {
         List<ProductImage> productImages = new ArrayList<>();
         Path uploadDir = Paths.get("src/main/resources/static/images/");
@@ -219,12 +211,6 @@ public class ProductServiceImpl implements ProductService {
 //                .backorders(product.getBackOrderAllowed() ? "yes" : "no")
                 .build();
     }
-    @Override
-    public Page<Product> searchProducts(String keyword, String category, Double maxPrice, String sort, Pageable pageable) {
-        return productRepository.searchProducts(keyword, category, maxPrice, pageable);
-    }
-
-
 
     Product getProductById(Long id) {
         log.info("getProductById={}", id);
