@@ -5,6 +5,7 @@ import com.ablueit.ecommerce.model.Categories;
 import com.ablueit.ecommerce.model.Product;
 import com.ablueit.ecommerce.model.Store;
 import com.ablueit.ecommerce.payload.request.ProductRequest;
+import com.ablueit.ecommerce.payload.response.ProductCardResponse;
 import com.ablueit.ecommerce.payload.response.ProductResponse;
 import com.ablueit.ecommerce.repository.CategoriesRepository;
 import com.ablueit.ecommerce.repository.ProductRepository;
@@ -201,9 +202,16 @@ public class ProductController {
         model.addAttribute("productId", id);
         return "show-product-user";
     }
+
     @GetMapping(value = "/get-product/{id}", produces = "application/json")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {
        log.info("GET /get-product/{}", id);
         return ResponseEntity.ok().body(productService.getProduct(id));
+    }
+
+    @GetMapping(value = "/get-related-product/{category-id}", produces = "application/json")
+    public ResponseEntity<List<ProductCardResponse>> getRelatedProduct(@PathVariable("category-id") Long id) {
+        log.info("GET /get-related-product/{}", id);
+        return ResponseEntity.ok().body(productService.getProductCardByCategory(id, 1L));
     }
 }

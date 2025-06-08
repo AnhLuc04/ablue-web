@@ -43,7 +43,7 @@ public class Product extends AuditEntity<Long> {
     @Column(name = "description", columnDefinition = "text")
     String description;
 
-    @Column(name = "short_description")
+    @Column(name = "short_description", columnDefinition = "text")
     String shortDescription;
 
     @Column(name = "sku")
@@ -92,8 +92,13 @@ public class Product extends AuditEntity<Long> {
     @ToString.Exclude
     List<ProductImage> productImages;
 
-    @OneToMany(mappedBy = "product")
+    @ManyToMany
+    @JoinTable(name = "product_category",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Categories> categories;
+
+
     private int salesCount; // 👈 Số lượng bán
 
 
@@ -114,7 +119,7 @@ public class Product extends AuditEntity<Long> {
     }
 
     public void setUpVariations(List<Variation> variationList) {
-        if(Objects.isNull(this.variations)) {
+        if (Objects.isNull(this.variations)) {
             this.variations = new ArrayList<>();
         }
         this.variations.addAll(variationList);

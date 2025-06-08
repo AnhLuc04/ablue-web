@@ -1,6 +1,7 @@
 package com.ablueit.ecommerce.service.impl;
 
 import com.ablueit.ecommerce.payload.request.AttributeRequest;
+import com.ablueit.ecommerce.payload.response.ProductCardResponse;
 import com.ablueit.ecommerce.service.FileService;
 import lombok.experimental.NonFinal;
 import net.coobird.thumbnailator.Thumbnails;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -100,11 +102,11 @@ public class ProductServiceImpl implements ProductService {
 
         fileService.upload(request.getPrimaryImage(), product, ImageType.PRIMARY);
 
-        if(!request.getSizeGuideImage().isEmpty()) {
+        if (!request.getSizeGuideImage().isEmpty()) {
             fileService.upload(request.getSizeGuideImage(), product, ImageType.SIZE_GUIDE);
         }
 
-        if(!request.getGalleryImages().isEmpty()) {
+        if (!request.getGalleryImages().isEmpty()) {
             request.getGalleryImages().forEach(x -> {
                 try {
                     fileService.upload(x, product, ImageType.DEFAULT);
@@ -163,6 +165,7 @@ public class ProductServiceImpl implements ProductService {
         ProductImage sizeGuide = productImageRepository.findByProductAndImageType(product, ImageType.SIZE_GUIDE);
         List<ProductImage> galleryImages = productImageRepository.findAllByProductAndImageType(product, ImageType.DEFAULT);
 
+
         return ProductResponse.builder()
                 .productName(product.getName())
                 .productDescription(product.getDescription())
@@ -172,13 +175,35 @@ public class ProductServiceImpl implements ProductService {
                 .primaryImage(primaryImage.getUrl())
                 .sizeGuideImage(sizeGuide.getUrl())
                 .galleryImages(galleryImages.stream().map(ProductImage::getUrl).toList())
-//                .category(product.getCategories().)
+                .category(product.getCategories().stream().findFirst().get().getName())
                 .sku(product.getSku())
                 .variationsData(variationResponses)
 //                .stockQuantity(product.getStockQuantity().longValue())
-                .stockStatus(product.getStockStatus().name())
+//                .stockStatus(Objects.isNull(product.getStockStatus().name()) ? null : product.getStockStatus().name())
 //                .backorders(product.getBackOrderAllowed() ? "yes" : "no")
                 .build();
+    }
+
+    @Override
+    public List<ProductCardResponse> getProductCardByCategory(Long categoryId, Long currentProductId) {
+        Categories categories = getCategoryById(categoryId);
+
+        List<Product> products = productRepository.findRelatedProductsByCategoryId(categoryId, currentProductId, 10);
+
+
+        return products.stream().map(x -> {
+
+           ProductImage primaryImage = productImageRepository.findByImageTypeAndProduct(ImageType.PRIMARY, x);
+
+            return ProductCardResponse
+                    .builder()
+                    .name(x.getName())
+                    .price(x.getPrice())
+                    .primaryImage(primaryImage.getUrl())
+                    .totalSold(100L)
+                    .rating(4.5)
+                    .build();
+        }).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override

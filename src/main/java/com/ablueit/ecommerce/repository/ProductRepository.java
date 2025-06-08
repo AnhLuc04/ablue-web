@@ -3,6 +3,7 @@ package com.ablueit.ecommerce.repository;
 import com.ablueit.ecommerce.model.Product;
 import com.ablueit.ecommerce.payload.request.VariantRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,6 +33,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findByPriceBetween(Double min, Double max, Pageable pageable);
 
+    @Query(value = "SELECT p.* FROM product p " +
+            "LEFT JOIN product_category pc ON pc.product_id = p.product_id " +
+            "WHERE pc.category_id = :categoryId " +
+            "AND p.product_id != :currentProductId " +
+            "LIMIT :limit",
+            nativeQuery = true)
+    List<Product> findRelatedProductsByCategoryId(@Param("categoryId") Long categoryId,
+                                                  @Param("currentProductId") Long currentProductId,
+                                                  @Param("limit") int limit);
 
 
     @Query("SELECT DISTINCT p FROM Product p " +

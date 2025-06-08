@@ -7,18 +7,86 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-    .variation-select:hover { transform: translateY(-2px); box-shadow:0 4px 6px rgba(0,0,0,0.1); }
-    .variation-select.active { border-color: #3b82f6; background: #eff6ff; }
-    .variation-select.out-of-stock { opacity: .5; cursor: not-allowed; position: relative; }
-    .variation-select.out-of-stock::after {
-      content:"Out of stock"; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%) rotate(-15deg);
-      background:rgba(239,68,68,0.8); color:#fff; padding:2px 8px; border-radius:4px; font-size:12px;
-    }
-    .product-image:hover { transform: scale(1.05); transition: .3s; }
-    .gallery-images img:hover, .gallery-images img.active { border:2px solid #3b82f6; }
-    .price-pulse { animation: pricePulse .5s ease-in-out; }
-    @keyframes pricePulse { 0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);} }
-  </style>
+        .variation-select:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .variation-select.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .variation-select.out-of-stock {
+            opacity: 0.5;
+            cursor: not-allowed;
+            position: relative;
+        }
+        .variation-select.out-of-stock::after {
+            content: "Out of stock";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            background: rgba(239,68,68,0.8);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .product-image:hover {
+            transform: scale(1.05);
+            transition: 0.3s;
+        }
+        .gallery-images img:hover, .gallery-images img.active {
+            border: 2px solid #3b82f6;
+        }
+        .price-pulse {
+            animation: pricePulse 0.5s ease-in-out;
+        }
+        @keyframes pricePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .thumbnail-active {
+            border: 3px solid #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .main-image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        .zoom-container {
+            position: relative;
+            cursor: zoom-in;
+        }
+        .variation-option {
+            transition: all 0.2s ease;
+        }
+        .variation-option:hover:not(.out-of-stock) {
+            transform: scale(1.02);
+        }
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
@@ -42,86 +110,151 @@
 </header>
 
 <!-- MAIN CONTENT -->
-<main class="container mx-auto py-8 px-4 max-w-5xl">
+<main class="container mx-auto py-8 px-4 max-w-6xl">
 
     <!-- Breadcrumbs -->
     <nav class="text-sm text-gray-500 mb-6">
-        <a href="/">Home</a> &gt;
-        <a href="/products">Products</a> &gt;
-        <span id="product-category">Category</span>
+        <a href="/" class="hover:text-blue-600">Home</a> &gt;
+        <a href="/products" class="hover:text-blue-600">Products</a> &gt;
+        <span id="product-category">Category</span> &gt;
+        <span id="product-name-breadcrumb">Product</span>
     </nav>
 
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden grid md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden grid lg:grid-cols-2 gap-8 mb-8">
         <!-- PRODUCT IMAGES -->
         <div class="p-6">
-<!--            <img id="mainImage" class="w-full h-auto rounded-lg product-image" src="" alt="Product">-->
-            <div class="gallery-images flex gap-2 mt-4 overflow-x-auto" id="thumbnail-container"></div>
+            <!-- Main Image -->
+            <div class="main-image-container mb-4">
+                <img id="mainImage" class="w-full h-96 object-cover rounded-lg product-image zoom-container"
+                     src="" alt="Product" onclick="openImageModal(this.src)">
+            </div>
+
+            <!-- Thumbnail Gallery -->
+            <div class="gallery-images flex gap-2 overflow-x-auto pb-2" id="thumbnail-container">
+                <!-- Thumbnails will be populated here -->
+            </div>
         </div>
 
         <!-- PRODUCT DETAIL -->
         <div class="p-6 flex flex-col justify-between">
             <div>
                 <h1 id="product-name" class="text-3xl font-bold mb-2">Product Name</h1>
-                <p id="stock-status" class="text-sm mb-4"></p>
 
-                <div class="mb-4">
-                    <span id="product-price" class="text-3xl font-semibold mr-2">$0.00</span>
-                    <span id="product-sale-price" class="line-through text-gray-500 hidden">$0.00</span>
-                    <span id="discount-badge" class="bg-red-100 text-red-800 text-sm px-2 py-1 rounded hidden">-0%</span>
+                <!-- Stock Status -->
+                <div class="flex items-center mb-4">
+                    <span id="stock-status" class="text-sm mr-4"></span>
+                    <span id="stock-quantity" class="text-sm text-gray-600"></span>
                 </div>
 
-                <p id="short-description" class="text-gray-600 mb-6"></p>
-                <div id="variation-container" class="space-y-4 mb-6"></div>
-
-                <div class="flex items-center space-x-4 mb-6">
-                    <div class="flex items-center border rounded">
-                        <button onclick="adjustQuantity(-1)" class="px-3 py-1 hover:bg-gray-200"><i class="fas fa-minus"></i></button>
-                        <input id="quantity" type="number" value="1" min="1" class="w-16 text-center p-2 border-l border-r focus:outline-none">
-                        <button onclick="adjustQuantity(1)" class="px-3 py-1 hover:bg-gray-200"><i class="fas fa-plus"></i></button>
+                <!-- Price Section -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span id="current-price" class="text-3xl font-bold text-blue-600">$0.00</span>
+                        <span id="original-price" class="text-xl line-through text-gray-500 hidden">$0.00</span>
+                        <span id="discount-badge" class="bg-red-100 text-red-800 text-sm px-2 py-1 rounded hidden">-0%</span>
                     </div>
-                    <button id="add-to-cart" class="flex-1 bg-blue-600 text-white py-2 rounded shadow hover:bg-blue-700 transition">
+                    <p id="price-note" class="text-sm text-gray-600 hidden">Price varies by options selected</p>
+                </div>
+
+                <!-- Short Description -->
+                <p id="short-description" class="text-gray-600 mb-6"></p>
+
+                <!-- Variations Container -->
+                <div id="variation-container" class="space-y-4 mb-6">
+                    <!-- Variations will be populated here -->
+                </div>
+
+                <!-- Quantity and Add to Cart -->
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="flex items-center border rounded-lg">
+                        <button onclick="adjustQuantity(-1)" class="px-3 py-2 hover:bg-gray-100 transition">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input id="quantity" type="number" value="1" min="1" max="999"
+                               class="w-16 text-center py-2 border-l border-r focus:outline-none">
+                        <button onclick="adjustQuantity(1)" class="px-3 py-2 hover:bg-gray-100 transition">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <button id="add-to-cart" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-cart-plus mr-2"></i> Add to Cart
                     </button>
-                    <button id="buy-now" class="bg-green-600 text-white py-2 px-4 rounded shadow hover:bg-green-700 transition">
+
+                    <button id="buy-now" class="bg-green-600 text-white py-2 px-4 rounded-lg shadow hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-bolt mr-1"></i> Buy Now
                     </button>
                 </div>
-            </div>
 
-            <div class="border-t pt-4 text-sm text-gray-600 grid grid-cols-2 gap-4">
-                <div>SKU: <span id="sku" class="font-medium"></span></div>
-                <div>Category: <span id="category" class="font-medium"></span></div>
+                <!-- Product Info -->
+                <div class="border-t pt-4 text-sm text-gray-600 grid grid-cols-2 gap-4">
+                    <div>SKU: <span id="sku" class="font-medium"></span></div>
+                    <div>Category: <span id="category" class="font-medium"></span></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- DETAILED INFO -->
-    <section class="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 class="text-2xl font-semibold mb-4">Product Description</h2>
-        <div id="full-description" class="prose max-w-none"></div>
-
-        <div class="mt-6">
-            <h3 class="text-xl font-semibold mb-2">Size Guide</h3>
-            <img id="size-guide-image" class="w-full h-auto rounded" src="" alt="Size Guide">
+    <!-- DETAILED INFO TABS -->
+    <section class="bg-white shadow rounded-lg mb-8">
+        <div class="border-b">
+            <nav class="flex">
+                <button class="tab-button active px-6 py-3 font-medium border-b-2 border-blue-600 text-blue-600"
+                        onclick="switchTab('description')">Description</button>
+                <button class="tab-button px-6 py-3 font-medium border-b-2 border-transparent hover:text-blue-600"
+                        onclick="switchTab('size-guide')">Size Guide</button>
+                <button class="tab-button px-6 py-3 font-medium border-b-2 border-transparent hover:text-blue-600"
+                        onclick="switchTab('reviews')">Reviews</button>
+            </nav>
         </div>
-    </section>
 
-    <!-- REVIEWS -->
-    <section class="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 class="text-2xl font-semibold mb-4">Customer Reviews</h2>
-        <div id="review-list" class="space-y-4"></div>
-        <button class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition">
-            <i class="fas fa-comment-dots mr-2"></i> Write a Review
-        </button>
+        <div class="p-6">
+            <!-- Description Tab -->
+            <div id="description-tab" class="tab-content">
+                <h2 class="text-2xl font-semibold mb-4">Product Description</h2>
+                <div id="full-description" class="prose max-w-none"></div>
+            </div>
+
+            <!-- Size Guide Tab -->
+            <div id="size-guide-tab" class="tab-content hidden">
+                <h2 class="text-2xl font-semibold mb-4">Size Guide</h2>
+                <div id="size-guide-container">
+                    <img id="size-guide-image" class="w-full max-w-2xl h-auto rounded-lg" src="" alt="Size Guide">
+                </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div id="reviews-tab" class="tab-content hidden">
+                <h2 class="text-2xl font-semibold mb-4">Customer Reviews</h2>
+                <div id="review-list" class="space-y-4">
+                    <p class="text-gray-500">No reviews yet. Be the first to review this product!</p>
+                </div>
+                <button class="mt-4 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-comment-dots mr-2"></i> Write a Review
+                </button>
+            </div>
+        </div>
     </section>
 
     <!-- RELATED PRODUCTS -->
     <section class="bg-white shadow rounded-lg p-6 mb-8">
         <h2 class="text-2xl font-semibold mb-4">Related Products</h2>
-        <div id="related-products-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="related-products-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <p class="text-gray-500 col-span-full">Loading related products...</p>
+        </div>
     </section>
 
 </main>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+    <div class="relative max-w-4xl max-h-full p-4">
+        <img id="modalImage" class="w-full h-auto rounded-lg" src="" alt="Product Image">
+        <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
 
 <!-- FOOTER -->
 <footer class="bg-gray-800 text-gray-400 py-6">
@@ -136,45 +269,528 @@
 </footer>
 
 <script>
-    const selectedVariations = {};
+    let productData = {};
+    let selectedVariations = {};
+    let currentVariation = null;
 
+    // Fetch product data from API
     async function fetchProductData(productId) {
-      try {
-        const resp = await fetch(`/products/get-product/${productId}`);
-        const data = await resp.json();
-        renderProduct(data);
-      } catch (e) {
-        console.error(e);
-        document.getElementById('product-name').textContent = 'Failed to load product';
-      }
+        try {
+            const response = await fetch(`/products/get-product/${productId}`);
+            if (!response.ok) throw new Error('Failed to fetch product');
+
+            productData = await response.json();
+            console.log('Product data:', productData);
+            renderProduct(productData);
+        } catch (error) {
+            console.error('Error fetching product:', error);
+            document.getElementById('product-name').textContent = 'Failed to load product';
+            showError('Failed to load product. Please try again.');
+        }
     }
 
-    function renderProduct(d) {
-      document.getElementById('product-name').textContent = d.productName || '';
-      document.getElementById('short-description').textContent = d.productShortDescription || '';
-      document.getElementById('full-description').innerHTML = d.productDescription || '';
-      document.getElementById('sku').textContent = d.sku || '';
-      document.getElementById('category').textContent = d.category || '';
-      document.getElementById('product-category').textContent = d.category || '';
-      document.getElementById('mainImage').src = d.primaryImage || '';
-      document.getElementById('size-guide-image').src = d.sizeGuideImage || '';
-      document.getElementById('stock-status').innerHTML = d.stockStatus === 'IN_STOCK'
-        ? '<i class="fas fa-check-circle text-green-600"></i> In Stock'
-        : '<i class="fas fa-times-circle text-red-600"></i> Out of Stock';
-      document.getElementById('product-price').textContent = `$${d.regularPrice || 0}`;
+    // Render product information
+    function renderProduct(data) {
+        // Basic product info
+        document.getElementById('product-name').textContent = data.productName || '';
+        document.getElementById('product-name-breadcrumb').textContent = data.productName || '';
+        document.getElementById('short-description').textContent = data.productShortDescription || '';
+        document.getElementById('full-description').innerHTML = data.productDescription || '';
+        document.getElementById('sku').textContent = data.sku || '';
+        document.getElementById('category').textContent = data.category || '';
+        document.getElementById('product-category').textContent = data.category || '';
 
-      // TODO: render variations, reviews, related, gallery...
-      // Suggest reusing logic from previous code version
+        // Stock status
+        renderStockStatus(data);
+
+        // Images
+        renderImages(data);
+
+        // Variations
+        renderVariations(data.variationsData || []);
+
+        // Initial price display
+        updatePriceDisplay();
     }
 
+    // Render stock status
+    function renderStockStatus(data) {
+        const stockStatusEl = document.getElementById('stock-status');
+        const stockQuantityEl = document.getElementById('stock-quantity');
+
+        if (data.stockStatus === 'IN_STOCK') {
+            stockStatusEl.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> In Stock';
+            stockQuantityEl.textContent = `${data.stockQuantity || 0} available`;
+        } else {
+            stockStatusEl.innerHTML = '<i class="fas fa-times-circle text-red-600"></i> Out of Stock';
+            stockQuantityEl.textContent = '';
+        }
+    }
+
+    // Render product images
+    function renderImages(data) {
+        const mainImage = document.getElementById('mainImage');
+        const thumbnailContainer = document.getElementById('thumbnail-container');
+        const sizeGuideImage = document.getElementById('size-guide-image');
+
+        // Collect all images
+        const allImages = [];
+        if (data.primaryImage) allImages.push(data.primaryImage);
+        if (data.galleryImages && data.galleryImages.length > 0) {
+            allImages.push(...data.galleryImages);
+        }
+
+        // Set main image
+        if (allImages.length > 0) {
+            mainImage.src = allImages[0];
+            mainImage.alt = data.productName || 'Product Image';
+        }
+
+        // Create thumbnails
+        thumbnailContainer.innerHTML = '';
+        allImages.forEach((imageUrl, index) => {
+            const thumbnail = document.createElement('img');
+            thumbnail.src = imageUrl;
+            thumbnail.alt = `${data.productName} - Image ${index + 1}`;
+            thumbnail.className = `w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all ${index === 0 ? 'thumbnail-active' : 'border-gray-200 hover:border-blue-300'}`;
+            thumbnail.onclick = () => selectMainImage(imageUrl, index);
+            thumbnailContainer.appendChild(thumbnail);
+        });
+
+        // Size guide image
+        if (data.sizeGuideImage) {
+            sizeGuideImage.src = data.sizeGuideImage;
+            sizeGuideImage.alt = 'Size Guide';
+        } else {
+            document.getElementById('size-guide-container').innerHTML = '<p class="text-gray-500">No size guide available for this product.</p>';
+        }
+    }
+
+    // Select main image
+    function selectMainImage(imageUrl, index) {
+        document.getElementById('mainImage').src = imageUrl;
+
+        // Update thumbnail active state
+        const thumbnails = document.querySelectorAll('#thumbnail-container img');
+        thumbnails.forEach((thumb, i) => {
+            if (i === index) {
+                thumb.classList.add('thumbnail-active');
+                thumb.classList.remove('border-gray-200');
+            } else {
+                thumb.classList.remove('thumbnail-active');
+                thumb.classList.add('border-gray-200');
+            }
+        });
+    }
+
+    // Render product variations
+    function renderVariations(variations) {
+        const container = document.getElementById('variation-container');
+
+        if (!variations || variations.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Group attributes
+        const attributeGroups = {};
+        variations.forEach(variation => {
+            variation.attributes.forEach(attr => {
+                if (!attributeGroups[attr.name]) {
+                    attributeGroups[attr.name] = new Set();
+                }
+                attributeGroups[attr.name].add(attr.term);
+            });
+        });
+
+        // Render attribute groups
+        container.innerHTML = '';
+        Object.keys(attributeGroups).forEach(attributeName => {
+            const attributeDiv = document.createElement('div');
+            attributeDiv.className = 'mb-4';
+
+            const label = document.createElement('label');
+            label.className = 'block text-sm font-medium text-gray-700 mb-2';
+            label.textContent = `${attributeName}:`;
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'flex flex-wrap gap-2';
+
+            Array.from(attributeGroups[attributeName]).forEach(term => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'variation-option variation-select px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium transition-all hover:border-blue-500';
+                option.textContent = term;
+                option.dataset.attribute = attributeName;
+                option.dataset.term = term;
+
+                // Check if this variation is available
+                const isAvailable = variations.some(v =>
+                    v.attributes.some(a => a.name === attributeName && a.term === term) &&
+                    v.stock > 0
+                );
+
+                if (!isAvailable) {
+                    option.classList.add('out-of-stock');
+                    option.disabled = true;
+                }
+
+                option.onclick = () => selectVariation(attributeName, term, option);
+                optionsDiv.appendChild(option);
+            });
+
+            attributeDiv.appendChild(label);
+            attributeDiv.appendChild(optionsDiv);
+            container.appendChild(attributeDiv);
+        });
+    }
+
+    // Select variation
+    function selectVariation(attributeName, term, buttonElement) {
+        if (buttonElement.disabled) return;
+
+        // Update selected variations
+        selectedVariations[attributeName] = term;
+
+        // Update button states for this attribute group
+        const attributeButtons = document.querySelectorAll(`[data-attribute="${attributeName}"]`);
+        attributeButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.term === term) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Find matching variation
+        findMatchingVariation();
+        updatePriceDisplay();
+        updateAvailability();
+    }
+
+    // Find matching variation based on selected attributes
+    function findMatchingVariation() {
+        if (!productData.variationsData) return null;
+
+        const selectedKeys = Object.keys(selectedVariations);
+
+        currentVariation = productData.variationsData.find(variation => {
+            return selectedKeys.every(key => {
+                return variation.attributes.some(attr =>
+                    attr.name === key && attr.term === selectedVariations[key]
+                );
+            });
+        });
+
+        return currentVariation;
+    }
+
+    // Update price display based on selected variation
+    function updatePriceDisplay() {
+        const currentPriceEl = document.getElementById('current-price');
+        const originalPriceEl = document.getElementById('original-price');
+        const discountBadgeEl = document.getElementById('discount-badge');
+        const priceNoteEl = document.getElementById('price-note');
+
+        if (currentVariation && currentVariation.price !== null) {
+            // Show variation price
+            currentPriceEl.textContent = `$${currentVariation.price.toFixed(2)}`;
+            currentPriceEl.classList.add('price-pulse');
+            setTimeout(() => currentPriceEl.classList.remove('price-pulse'), 500);
+
+            // Show original price if different
+            if (productData.regularPrice && currentVariation.price < productData.regularPrice) {
+                originalPriceEl.textContent = `$${productData.regularPrice.toFixed(2)}`;
+                originalPriceEl.classList.remove('hidden');
+
+                const discount = Math.round(((productData.regularPrice - currentVariation.price) / productData.regularPrice) * 100);
+                discountBadgeEl.textContent = `-${discount}%`;
+                discountBadgeEl.classList.remove('hidden');
+            } else {
+                originalPriceEl.classList.add('hidden');
+                discountBadgeEl.classList.add('hidden');
+            }
+
+            priceNoteEl.classList.add('hidden');
+        } else {
+            // Show base price
+            if (productData.salePrice && productData.salePrice < productData.regularPrice) {
+                currentPriceEl.textContent = `$${productData.salePrice.toFixed(2)}`;
+                originalPriceEl.textContent = `$${productData.regularPrice.toFixed(2)}`;
+                originalPriceEl.classList.remove('hidden');
+
+                const discount = Math.round(((productData.regularPrice - productData.salePrice) / productData.regularPrice) * 100);
+                discountBadgeEl.textContent = `-${discount}%`;
+                discountBadgeEl.classList.remove('hidden');
+            } else {
+                currentPriceEl.textContent = `$${(productData.regularPrice || 0).toFixed(2)}`;
+                originalPriceEl.classList.add('hidden');
+                discountBadgeEl.classList.add('hidden');
+            }
+
+            if (productData.variationsData && productData.variationsData.length > 0) {
+                priceNoteEl.classList.remove('hidden');
+            }
+        }
+    }
+
+    // Update availability based on selected variation
+    function updateAvailability() {
+        const addToCartBtn = document.getElementById('add-to-cart');
+        const buyNowBtn = document.getElementById('buy-now');
+        const quantityInput = document.getElementById('quantity');
+
+        if (currentVariation) {
+            const isAvailable = currentVariation.stock > 0;
+
+            addToCartBtn.disabled = !isAvailable;
+            buyNowBtn.disabled = !isAvailable;
+            quantityInput.max = currentVariation.stock;
+
+            if (!isAvailable) {
+                addToCartBtn.innerHTML = '<i class="fas fa-times mr-2"></i> Out of Stock';
+                buyNowBtn.innerHTML = '<i class="fas fa-times mr-1"></i> Unavailable';
+            } else {
+                addToCartBtn.innerHTML = '<i class="fas fa-cart-plus mr-2"></i> Add to Cart';
+                buyNowBtn.innerHTML = '<i class="fas fa-bolt mr-1"></i> Buy Now';
+            }
+        } else {
+            // Reset to default state
+            addToCartBtn.disabled = false;
+            buyNowBtn.disabled = false;
+            addToCartBtn.innerHTML = '<i class="fas fa-cart-plus mr-2"></i> Add to Cart';
+            buyNowBtn.innerHTML = '<i class="fas fa-bolt mr-1"></i> Buy Now';
+        }
+    }
+
+    // Adjust quantity
     function adjustQuantity(delta) {
-      const q = document.getElementById('quantity');
-      const v = Math.max(1, parseInt(q.value || 1) + delta);
-      q.value = v;
+        const quantityInput = document.getElementById('quantity');
+        const currentValue = parseInt(quantityInput.value || 1);
+        const newValue = Math.max(1, Math.min(parseInt(quantityInput.max || 999), currentValue + delta));
+        quantityInput.value = newValue;
     }
 
-    // Example: fetch on load (replace with real productId via Thymeleaf)
-    fetchProductData(/*[[${productId}]]*/ 'demo-id');
-  </script>
+    // Tab switching
+    function switchTab(tabName) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.add('hidden');
+        });
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active', 'border-blue-600', 'text-blue-600');
+            btn.classList.add('border-transparent');
+        });
+
+        // Show selected tab content
+        document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+        // Add active class to selected tab button
+        event.target.classList.add('active', 'border-blue-600', 'text-blue-600');
+        event.target.classList.remove('border-transparent');
+    }
+
+    // Image modal functions
+    function openImageModal(imageSrc) {
+        document.getElementById('modalImage').src = imageSrc;
+        document.getElementById('imageModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Error handling
+    function showError(message) {
+        // You can implement a toast notification or alert here
+        console.error(message);
+        alert(message);
+    }
+
+    // Add to cart functionality
+    document.getElementById('add-to-cart').addEventListener('click', function() {
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        if (productData.variationsData && productData.variationsData.length > 0 && !currentVariation) {
+            showError('Please select all product options before adding to cart.');
+            return;
+        }
+
+        const cartItem = {
+            productId: productData.id,
+            productName: productData.productName,
+            quantity: quantity,
+            price: currentVariation ? currentVariation.price : (productData.salePrice || productData.regularPrice),
+            variations: selectedVariations,
+            image: productData.primaryImage
+        };
+
+        console.log('Adding to cart:', cartItem);
+        // Implement your add to cart logic here
+        alert('Product added to cart!');
+    });
+
+    // Buy now functionality
+    document.getElementById('buy-now').addEventListener('click', function() {
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        if (productData.variationsData && productData.variationsData.length > 0 && !currentVariation) {
+            showError('Please select all product options before proceeding.');
+            return;
+        }
+
+        console.log('Buy now clicked');
+        // Implement your buy now logic here
+        alert('Redirecting to checkout...');
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+
+    // Keyboard navigation for modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+
+    // Fetch related products from API
+    async function fetchRelatedProducts(categoryId) {
+        try {
+            categoryId = 1;
+            const response = await fetch(`/products/get-related-product/${categoryId}`);
+            if (!response.ok) throw new Error('Failed to fetch related products');
+
+            const relatedProducts = await response.json();
+            console.log('Related products:', relatedProducts);
+            renderRelatedProducts(relatedProducts);
+        } catch (error) {
+            console.error('Error fetching related products:', error);
+            document.getElementById('related-products-list').innerHTML =
+                '<p class="text-gray-500 col-span-full">Failed to load related products.</p>';
+        }
+    }
+
+    // Render related products
+    function renderRelatedProducts(products) {
+        const container = document.getElementById('related-products-list');
+
+        if (!products || products.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 col-span-full">No related products found.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+
+        products.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer';
+            productCard.onclick = () => window.location.href = product.productUrl;
+
+            productCard.innerHTML = `
+            <div class="relative">
+                <img src="${product.primaryImage || '/images/placeholder.jpg'}"
+                     alt="${product.name}"
+                     class="w-full h-48 object-cover">
+                ${product.totalSold > 0 ? `
+                    <div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                        ${product.totalSold} sold
+                    </div>
+                ` : ''}
+            </div>
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 h-12 overflow-hidden">
+                    ${product.name}
+                </h3>
+                <div class="flex items-center mb-2">
+                    ${renderStars(product.rating || 0)}
+                    <span class="text-sm text-gray-600 ml-2">(${product.rating || 0})</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-lg font-bold text-blue-600">$${product.price.toFixed(2)}</span>
+                    <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
+                            onclick="event.stopPropagation(); addToCartQuick('${product.productUrl}')">
+                        <i class="fas fa-cart-plus"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+
+            container.appendChild(productCard);
+        });
+    }
+
+    // Render star rating
+    function renderStars(rating) {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+        let starsHtml = '';
+
+        // Full stars
+        for (let i = 0; i < fullStars; i++) {
+            starsHtml += '<i class="fas fa-star text-yellow-400"></i>';
+        }
+
+        // Half star
+        if (hasHalfStar) {
+            starsHtml += '<i class="fas fa-star-half-alt text-yellow-400"></i>';
+        }
+
+        // Empty stars
+        for (let i = 0; i < emptyStars; i++) {
+            starsHtml += '<i class="far fa-star text-gray-300"></i>';
+        }
+
+        return starsHtml;
+    }
+
+    // Quick add to cart for related products
+    function addToCartQuick(productUrl) {
+        // Extract product ID from URL or implement your quick add logic
+        console.log('Quick add to cart:', productUrl);
+        alert('Added to cart!');
+    }
+
+    // Sửa lại hàm renderProduct để gọi related products
+    function renderProduct(data) {
+        // ... existing code ...
+
+        // Stock status
+        renderStockStatus(data);
+
+        // Images
+        renderImages(data);
+
+        // Variations
+        renderVariations(data.variationsData || []);
+
+        // Initial price display
+        updatePriceDisplay();
+
+        // THÊM: Fetch related products based on category
+        if (data.category) {
+            // Assuming you have categoryId, if not, you might need to extract it
+            // For now, using category name as ID (adjust as needed)
+            fetchRelatedProducts(data.categoryId || data.category);
+        }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get product ID from URL or Thymeleaf
+        const productId = window.location.pathname.split('/').pop();
+        fetchProductData(productId);
+    });
+
+</script>
 </body>
 </html>
