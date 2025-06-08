@@ -23,4 +23,7 @@ public record ProductRequest(
         @ToString.Exclude @JsonProperty("primaryImage") MultipartFile primaryImage,
         @ToString.Exclude @JsonProperty("sizeGuideImage") MultipartFile sizeGuideImage,
         @ToString.Exclude @JsonProperty("galleryImages") List<MultipartFile> galleryImages
-) {}
+) {
+
+
+}
