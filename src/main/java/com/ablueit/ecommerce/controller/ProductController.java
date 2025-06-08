@@ -4,6 +4,7 @@ import com.ablueit.ecommerce.exception.ResourceNotFoundException;
 import com.ablueit.ecommerce.model.Categories;
 import com.ablueit.ecommerce.model.Product;
 import com.ablueit.ecommerce.model.Store;
+import com.ablueit.ecommerce.model.Variation;
 import com.ablueit.ecommerce.payload.request.ProductRequest;
 import com.ablueit.ecommerce.payload.response.ProductResponse;
 import com.ablueit.ecommerce.repository.CategoriesRepository;
@@ -206,4 +207,6 @@ public class ProductController {
        log.info("GET /get-product/{}", id);
         return ResponseEntity.ok().body(productService.getProduct(id));
     }
+
+
 }

@@ -1,6 +1,7 @@
 package com.ablueit.ecommerce.repository;
 
 import com.ablueit.ecommerce.model.Product;
+import com.ablueit.ecommerce.model.Variation;
 import com.ablueit.ecommerce.payload.request.VariantRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -44,5 +45,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                  @Param("category") String category,
                                  @Param("maxPrice") Double maxPrice,
                                  Pageable pageable);
+
+    List<Product> findByStoreId(Long storeId);
+
 
 }

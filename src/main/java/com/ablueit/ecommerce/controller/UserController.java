@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -41,5 +42,16 @@ public class UserController {
         model.addAttribute("stores", stores);
 
         return "index"; // Trả về file index.html trong templates
+    }
+    @GetMapping("/stores")
+    public String listStores(Model model) {
+        model.addAttribute("stores", storeRepository.findAll());
+        return "store-dashboard/store-list";  // Thymeleaf template name
+    }
+    @GetMapping("/{storeId}/products")
+    public String getProductsByStore(@PathVariable Long storeId, Model model) {
+        List<Product> products = productRepository.findByStoreId(storeId);
+        model.addAttribute("products", products);
+        return "store/store-products";
     }
 }
