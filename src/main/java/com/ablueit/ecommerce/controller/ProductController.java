@@ -159,7 +159,7 @@ public class ProductController {
 
 
     @PostMapping("/create-variation-product/")
-    public ResponseEntity<?> createVariationProduct(@ModelAttribute  ProductRequest request) throws IOException {
+    public ResponseEntity<ProductResponse> createVariationProduct(@ModelAttribute  ProductRequest request) throws IOException {
         return ResponseEntity.ok().body(productService.addVariationProduct(request));
     }
 
@@ -200,7 +200,7 @@ public class ProductController {
     public String showProduct(Model model, @PathVariable Long id) throws IOException {
         log.info("GET /show-product/{}", id);
         model.addAttribute("productId", id);
-        return "product-dashboard/show-product-user";
+        return "show-product-user";
     }
     @GetMapping(value = "/get-product/{id}", produces = "application/json")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {

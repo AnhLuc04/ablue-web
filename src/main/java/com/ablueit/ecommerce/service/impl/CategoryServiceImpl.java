@@ -5,7 +5,9 @@ import com.ablueit.ecommerce.model.Categories;
 import com.ablueit.ecommerce.model.Store;
 import com.ablueit.ecommerce.model.User;
 import com.ablueit.ecommerce.payload.request.CategoryRequest;
+import com.ablueit.ecommerce.payload.response.CategoryResponse;
 import com.ablueit.ecommerce.repository.CategoriesRepository;
+import com.ablueit.ecommerce.repository.StoreRepository;
 import com.ablueit.ecommerce.repository.UserRepository;
 import com.ablueit.ecommerce.service.CategoryService;
 import com.ablueit.ecommerce.service.StoreService;
@@ -30,6 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
     CategoriesRepository categoriesRepository;
     StoreService storeService;
     UserRepository userRepository;
+    StoreRepository storeRepository;
 
     @Override
     public String create(CategoryRequest request, RedirectAttributes redirectAttributes) {
@@ -121,6 +124,22 @@ public class CategoryServiceImpl implements CategoryService {
         redirectAttributes.addFlashAttribute("successEditMessageCategory", "Updated successfully");
 
     return String.format("redirect:/category/"+ store.getId());
+    }
+
+    @Override
+    public List<CategoryResponse> getAllCategoryByStoreId(Long storeId) {
+
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new ResourceNotFoundException("store not found"));
+
+        List<Categories> categories = categoriesRepository.findByStore(store);
+
+        return categories.stream()
+                .map(x -> CategoryResponse.builder()
+                        .id(x.getId())
+                        .name(x.getName())
+                        .build()).toList();
     }
 
     private User getUserFromAuthenticated() {
