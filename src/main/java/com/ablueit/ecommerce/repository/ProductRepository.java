@@ -31,7 +31,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
+    @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.name = :categoryName AND p.price BETWEEN :min AND :max")
+    List<Product> findByCategoryNameAndPriceBetween(
+            @Param("categoryName") String categoryName,
+            @Param("min") Double min,
+            @Param("max") Double max
+    );
+
     Page<Product> findByPriceBetween(Double min, Double max, Pageable pageable);
+
+    List<Product> findByPriceBetween(Double min, Double max);
 
     @Query(value = "SELECT p.* FROM product p " +
             "LEFT JOIN product_category pc ON pc.product_id = p.product_id " +

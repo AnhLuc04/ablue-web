@@ -197,6 +197,7 @@ public class ProductServiceImpl implements ProductService {
 
             return ProductCardResponse
                     .builder()
+                    .id(x.getId())
                     .name(x.getName())
                     .price(x.getPrice())
                     .primaryImage(primaryImage.getUrl())

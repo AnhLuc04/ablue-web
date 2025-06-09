@@ -85,7 +85,25 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-
+        .prose {
+            max-width: none;
+            line-height: 1.6;
+        }
+        .prose p {
+            margin-bottom: 1rem;
+        }
+        .prose h1, .prose h2, .prose h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .prose ul, .prose ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+        .prose li {
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -126,7 +144,7 @@
             <!-- Main Image -->
             <div class="main-image-container mb-4">
                 <img id="mainImage" class="w-full h-96 object-cover rounded-lg product-image zoom-container"
-                     src="" alt="Product" onclick="openImageModal(this.src)">
+                     src="/images/placeholder.jpg" alt="Product" onclick="openImageModal(this.src)">
             </div>
 
             <!-- Thumbnail Gallery -->
@@ -138,7 +156,7 @@
         <!-- PRODUCT DETAIL -->
         <div class="p-6 flex flex-col justify-between">
             <div>
-                <h1 id="product-name" class="text-3xl font-bold mb-2">Product Name</h1>
+                <h1 id="product-name" class="text-3xl font-bold mb-2">Loading...</h1>
 
                 <!-- Stock Status -->
                 <div class="flex items-center mb-4">
@@ -157,7 +175,9 @@
                 </div>
 
                 <!-- Short Description -->
-                <p id="short-description" class="text-gray-600 mb-6"></p>
+                <div class="mb-6">
+                    <p id="short-description" class="text-gray-600"></p>
+                </div>
 
                 <!-- Variations Container -->
                 <div id="variation-container" class="space-y-4 mb-6">
@@ -188,8 +208,8 @@
 
                 <!-- Product Info -->
                 <div class="border-t pt-4 text-sm text-gray-600 grid grid-cols-2 gap-4">
-                    <div>SKU: <span id="sku" class="font-medium"></span></div>
-                    <div>Category: <span id="category" class="font-medium"></span></div>
+                    <div>SKU: <span id="sku" class="font-medium">-</span></div>
+                    <div>Category: <span id="category" class="font-medium">-</span></div>
                 </div>
             </div>
         </div>
@@ -212,7 +232,9 @@
             <!-- Description Tab -->
             <div id="description-tab" class="tab-content">
                 <h2 class="text-2xl font-semibold mb-4">Product Description</h2>
-                <div id="full-description" class="prose max-w-none"></div>
+                <div id="full-description" class="prose max-w-none">
+                    <p class="text-gray-500">Loading description...</p>
+                </div>
             </div>
 
             <!-- Size Guide Tab -->
@@ -273,44 +295,115 @@
     let selectedVariations = {};
     let currentVariation = null;
 
+    // Utility functions
+    const utils = {
+        formatPrice: (price) => {
+            return price ? `$${parseFloat(price).toFixed(2)}` : '$0.00';
+        },
+
+        safeText: (text) => {
+            return text || '';
+        },
+
+        formatDescription: (description) => {
+            if (!description) return '<p class="text-gray-500">No description available.</p>';
+
+            // Convert line breaks to paragraphs
+            return description
+                .split('\n')
+                .filter(line => line.trim())
+                .map(line => `<p>${line.trim()}</p>`)
+                .join('');
+        },
+
+        showLoading: (elementId) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+            }
+        },
+
+        hideLoading: (elementId, content = '') => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = content;
+            }
+        }
+    };
+
     // Fetch product data from API
     async function fetchProductData(productId) {
         try {
+            utils.showLoading('product-name');
+
             const response = await fetch(`/products/get-product/${productId}`);
-            if (!response.ok) throw new Error('Failed to fetch product');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             productData = await response.json();
-            console.log('Product data:', productData);
+            console.log('Product data received:', productData);
+
+            if (!productData) {
+                throw new Error('No product data received');
+            }
+
             renderProduct(productData);
         } catch (error) {
             console.error('Error fetching product:', error);
-            document.getElementById('product-name').textContent = 'Failed to load product';
             showError('Failed to load product. Please try again.');
+
+            // Set fallback content
+            document.getElementById('product-name').textContent = 'Product not found';
+            document.getElementById('short-description').textContent = 'Unable to load product information.';
         }
     }
 
     // Render product information
     function renderProduct(data) {
-        // Basic product info
-        document.getElementById('product-name').textContent = data.productName || '';
-        document.getElementById('product-name-breadcrumb').textContent = data.productName || '';
-        document.getElementById('short-description').textContent = data.productShortDescription || '';
-        document.getElementById('full-description').innerHTML = data.productDescription || '';
-        document.getElementById('sku').textContent = data.sku || '';
-        document.getElementById('category').textContent = data.category || '';
-        document.getElementById('product-category').textContent = data.category || '';
+        try {
+            console.log('Rendering product with data:', data);
 
-        // Stock status
-        renderStockStatus(data);
+            // Basic product info - FIX: Correct property names
+            const productName = utils.safeText(data.productName);
+            const shortDesc = utils.safeText(data.productShortDescription);
+            const fullDesc = utils.formatDescription(data.productDescription);
+            const category = utils.safeText(data.category);
+            const sku = utils.safeText(data.sku);
 
-        // Images
-        renderImages(data);
+            // Update DOM elements
+            document.getElementById('product-name').textContent = productName;
+            document.getElementById('product-name-breadcrumb').textContent = productName;
+            document.getElementById('short-description').textContent = shortDesc;
+            document.getElementById('full-description').innerHTML = fullDesc;
+            document.getElementById('sku').textContent = sku;
+            document.getElementById('category').textContent = category;
+            document.getElementById('product-category').textContent = category;
 
-        // Variations
-        renderVariations(data.variationsData || []);
+            // Update page title
+            document.title = `${productName} – MyShop`;
 
-        // Initial price display
-        updatePriceDisplay();
+            // Stock status
+            renderStockStatus(data);
+
+            // Images
+            renderImages(data);
+
+            // Variations
+            renderVariations(data.variationsData || []);
+
+            // Initial price display
+            updatePriceDisplay();
+
+            // Fetch related products
+            if (data.category) {
+                fetchRelatedProducts(data.categoryId || 1);
+            }
+
+        } catch (error) {
+            console.error('Error rendering product:', error);
+            showError('Error displaying product information.');
+        }
     }
 
     // Render stock status
@@ -318,9 +411,25 @@
         const stockStatusEl = document.getElementById('stock-status');
         const stockQuantityEl = document.getElementById('stock-quantity');
 
-        if (data.stockStatus === 'IN_STOCK') {
+        // Check variations for stock if no direct stock info
+        let hasStock = false;
+        let totalStock = 0;
+
+        if (data.variationsData && data.variationsData.length > 0) {
+            data.variationsData.forEach(variation => {
+                if (variation.stock > 0) {
+                    hasStock = true;
+                    totalStock += variation.stock;
+                }
+            });
+        } else if (data.stockQuantity > 0) {
+            hasStock = true;
+            totalStock = data.stockQuantity;
+        }
+
+        if (hasStock) {
             stockStatusEl.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> In Stock';
-            stockQuantityEl.textContent = `${data.stockQuantity || 0} available`;
+            stockQuantityEl.textContent = totalStock > 0 ? `${totalStock} available` : '';
         } else {
             stockStatusEl.innerHTML = '<i class="fas fa-times-circle text-red-600"></i> Out of Stock';
             stockQuantityEl.textContent = '';
@@ -336,7 +445,7 @@
         // Collect all images
         const allImages = [];
         if (data.primaryImage) allImages.push(data.primaryImage);
-        if (data.galleryImages && data.galleryImages.length > 0) {
+        if (data.galleryImages && Array.isArray(data.galleryImages)) {
             allImages.push(...data.galleryImages);
         }
 
@@ -344,25 +453,38 @@
         if (allImages.length > 0) {
             mainImage.src = allImages[0];
             mainImage.alt = data.productName || 'Product Image';
+        } else {
+            mainImage.src = '/images/placeholder.jpg';
+            mainImage.alt = 'No image available';
         }
 
         // Create thumbnails
         thumbnailContainer.innerHTML = '';
-        allImages.forEach((imageUrl, index) => {
-            const thumbnail = document.createElement('img');
-            thumbnail.src = imageUrl;
-            thumbnail.alt = `${data.productName} - Image ${index + 1}`;
-            thumbnail.className = `w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all ${index === 0 ? 'thumbnail-active' : 'border-gray-200 hover:border-blue-300'}`;
-            thumbnail.onclick = () => selectMainImage(imageUrl, index);
-            thumbnailContainer.appendChild(thumbnail);
-        });
+        if (allImages.length > 1) {
+            allImages.forEach((imageUrl, index) => {
+                const thumbnail = document.createElement('img');
+                thumbnail.src = imageUrl;
+                thumbnail.alt = `${data.productName} - Image ${index + 1}`;
+                thumbnail.className = `w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all ${index === 0 ? 'thumbnail-active' : 'border-gray-200 hover:border-blue-300'}`;
+                thumbnail.onclick = () => selectMainImage(imageUrl, index);
+                thumbnail.onerror = () => {
+                    thumbnail.src = '/images/placeholder.jpg';
+                };
+                thumbnailContainer.appendChild(thumbnail);
+            });
+        }
 
         // Size guide image
         if (data.sizeGuideImage) {
             sizeGuideImage.src = data.sizeGuideImage;
             sizeGuideImage.alt = 'Size Guide';
+            sizeGuideImage.onerror = () => {
+                document.getElementById('size-guide-container').innerHTML =
+                    '<p class="text-gray-500">Size guide image not available.</p>';
+            };
         } else {
-            document.getElementById('size-guide-container').innerHTML = '<p class="text-gray-500">No size guide available for this product.</p>';
+            document.getElementById('size-guide-container').innerHTML =
+                '<p class="text-gray-500">No size guide available for this product.</p>';
         }
     }
 
@@ -395,12 +517,14 @@
         // Group attributes
         const attributeGroups = {};
         variations.forEach(variation => {
-            variation.attributes.forEach(attr => {
-                if (!attributeGroups[attr.name]) {
-                    attributeGroups[attr.name] = new Set();
-                }
-                attributeGroups[attr.name].add(attr.term);
-            });
+            if (variation.attributes && Array.isArray(variation.attributes)) {
+                variation.attributes.forEach(attr => {
+                    if (!attributeGroups[attr.name]) {
+                        attributeGroups[attr.name] = new Set();
+                    }
+                    attributeGroups[attr.name].add(attr.term);
+                });
+            }
         });
 
         // Render attribute groups
@@ -426,7 +550,7 @@
 
                 // Check if this variation is available
                 const isAvailable = variations.some(v =>
-                    v.attributes.some(a => a.name === attributeName && a.term === term) &&
+                    v.attributes && v.attributes.some(a => a.name === attributeName && a.term === term) &&
                     v.stock > 0
                 );
 
@@ -474,6 +598,8 @@
         const selectedKeys = Object.keys(selectedVariations);
 
         currentVariation = productData.variationsData.find(variation => {
+            if (!variation.attributes) return false;
+
             return selectedKeys.every(key => {
                 return variation.attributes.some(attr =>
                     attr.name === key && attr.term === selectedVariations[key]
@@ -493,13 +619,13 @@
 
         if (currentVariation && currentVariation.price !== null) {
             // Show variation price
-            currentPriceEl.textContent = `$${currentVariation.price.toFixed(2)}`;
+            currentPriceEl.textContent = utils.formatPrice(currentVariation.price);
             currentPriceEl.classList.add('price-pulse');
             setTimeout(() => currentPriceEl.classList.remove('price-pulse'), 500);
 
             // Show original price if different
             if (productData.regularPrice && currentVariation.price < productData.regularPrice) {
-                originalPriceEl.textContent = `$${productData.regularPrice.toFixed(2)}`;
+                originalPriceEl.textContent = utils.formatPrice(productData.regularPrice);
                 originalPriceEl.classList.remove('hidden');
 
                 const discount = Math.round(((productData.regularPrice - currentVariation.price) / productData.regularPrice) * 100);
@@ -514,15 +640,15 @@
         } else {
             // Show base price
             if (productData.salePrice && productData.salePrice < productData.regularPrice) {
-                currentPriceEl.textContent = `$${productData.salePrice.toFixed(2)}`;
-                originalPriceEl.textContent = `$${productData.regularPrice.toFixed(2)}`;
+                currentPriceEl.textContent = utils.formatPrice(productData.salePrice);
+                originalPriceEl.textContent = utils.formatPrice(productData.regularPrice);
                 originalPriceEl.classList.remove('hidden');
 
                 const discount = Math.round(((productData.regularPrice - productData.salePrice) / productData.regularPrice) * 100);
                 discountBadgeEl.textContent = `-${discount}%`;
                 discountBadgeEl.classList.remove('hidden');
             } else {
-                currentPriceEl.textContent = `$${(productData.regularPrice || 0).toFixed(2)}`;
+                currentPriceEl.textContent = utils.formatPrice(productData.regularPrice);
                 originalPriceEl.classList.add('hidden');
                 discountBadgeEl.classList.add('hidden');
             }
@@ -566,7 +692,8 @@
     function adjustQuantity(delta) {
         const quantityInput = document.getElementById('quantity');
         const currentValue = parseInt(quantityInput.value || 1);
-        const newValue = Math.max(1, Math.min(parseInt(quantityInput.max || 999), currentValue + delta));
+        const maxValue = parseInt(quantityInput.max || 999);
+        const newValue = Math.max(1, Math.min(maxValue, currentValue + delta));
         quantityInput.value = newValue;
     }
 
@@ -587,8 +714,11 @@
         document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 
         // Add active class to selected tab button
-        event.target.classList.add('active', 'border-blue-600', 'text-blue-600');
-        event.target.classList.remove('border-transparent');
+        const activeButton = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+        if (activeButton) {
+            activeButton.classList.add('active', 'border-blue-600', 'text-blue-600');
+            activeButton.classList.remove('border-transparent');
+        }
     }
 
     // Image modal functions
@@ -605,66 +735,22 @@
 
     // Error handling
     function showError(message) {
-        // You can implement a toast notification or alert here
         console.error(message);
-        alert(message);
+
+        // Create a simple toast notification
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
     }
 
-    // Add to cart functionality
-    document.getElementById('add-to-cart').addEventListener('click', function() {
-        const quantity = parseInt(document.getElementById('quantity').value);
-
-        if (productData.variationsData && productData.variationsData.length > 0 && !currentVariation) {
-            showError('Please select all product options before adding to cart.');
-            return;
-        }
-
-        const cartItem = {
-            productId: productData.id,
-            productName: productData.productName,
-            quantity: quantity,
-            price: currentVariation ? currentVariation.price : (productData.salePrice || productData.regularPrice),
-            variations: selectedVariations,
-            image: productData.primaryImage
-        };
-
-        console.log('Adding to cart:', cartItem);
-        // Implement your add to cart logic here
-        alert('Product added to cart!');
-    });
-
-    // Buy now functionality
-    document.getElementById('buy-now').addEventListener('click', function() {
-        const quantity = parseInt(document.getElementById('quantity').value);
-
-        if (productData.variationsData && productData.variationsData.length > 0 && !currentVariation) {
-            showError('Please select all product options before proceeding.');
-            return;
-        }
-
-        console.log('Buy now clicked');
-        // Implement your buy now logic here
-        alert('Redirecting to checkout...');
-    });
-
-    // Close modal when clicking outside
-    document.getElementById('imageModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeImageModal();
-        }
-    });
-
-    // Keyboard navigation for modal
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeImageModal();
-        }
-    });
-
     // Fetch related products from API
-    async function fetchRelatedProducts(categoryId) {
+    async function fetchRelatedProducts(categoryId = 1) {
         try {
-            categoryId = 1;
             const response = await fetch(`/products/get-related-product/${categoryId}`);
             if (!response.ok) throw new Error('Failed to fetch related products');
 
@@ -692,36 +778,37 @@
         products.forEach(product => {
             const productCard = document.createElement('div');
             productCard.className = 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer';
-            productCard.onclick = () => window.location.href = product.productUrl;
+            productCard.onclick = () => window.location.href = `/products/show-product/${product.id}`;
 
             productCard.innerHTML = `
-            <div class="relative">
-                <img src="${product.primaryImage || '/images/placeholder.jpg'}"
-                     alt="${product.name}"
-                     class="w-full h-48 object-cover">
-                ${product.totalSold > 0 ? `
-                    <div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                        ${product.totalSold} sold
+                <div class="relative">
+                    <img src="${product.primaryImage || '/images/placeholder.jpg'}"
+                         alt="${product.name}"
+                         class="w-full h-48 object-cover"
+                         onerror="this.src='/images/placeholder.jpg'">
+                    ${product.totalSold > 0 ? `
+                        <div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                            ${product.totalSold} sold
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 h-12 overflow-hidden">
+                        ${product.name}
+                    </h3>
+                    <div class="flex items-center mb-2">
+                        ${renderStars(product.rating || 0)}
+                        <span class="text-sm text-gray-600 ml-2">(${product.rating || 0})</span>
                     </div>
-                ` : ''}
-            </div>
-            <div class="p-4">
-                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 h-12 overflow-hidden">
-                    ${product.name}
-                </h3>
-                <div class="flex items-center mb-2">
-                    ${renderStars(product.rating || 0)}
-                    <span class="text-sm text-gray-600 ml-2">(${product.rating || 0})</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-bold text-blue-600">${utils.formatPrice(product.price)}</span>
+                        <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
+                                onclick="event.stopPropagation(); addToCartQuick('${product.id}')">
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-bold text-blue-600">$${product.price.toFixed(2)}</span>
-                    <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
-                            onclick="event.stopPropagation(); addToCartQuick('${product.productUrl}')">
-                        <i class="fas fa-cart-plus"></i>
-                    </button>
-                </div>
-            </div>
-        `;
+            `;
 
             container.appendChild(productCard);
         });
@@ -755,40 +842,69 @@
 
     // Quick add to cart for related products
     function addToCartQuick(productUrl) {
-        // Extract product ID from URL or implement your quick add logic
         console.log('Quick add to cart:', productUrl);
-        alert('Added to cart!');
+        showError('Added to cart!'); // Using showError for notification
     }
 
-    // Sửa lại hàm renderProduct để gọi related products
-    function renderProduct(data) {
-        // ... existing code ...
+    // Add to cart functionality
+    document.getElementById('add-to-cart').addEventListener('click', function() {
+        const quantity = parseInt(document.getElementById('quantity').value);
 
-        // Stock status
-        renderStockStatus(data);
-
-        // Images
-        renderImages(data);
-
-        // Variations
-        renderVariations(data.variationsData || []);
-
-        // Initial price display
-        updatePriceDisplay();
-
-        // THÊM: Fetch related products based on category
-        if (data.category) {
-            // Assuming you have categoryId, if not, you might need to extract it
-            // For now, using category name as ID (adjust as needed)
-            fetchRelatedProducts(data.categoryId || data.category);
+        if (productData.variationsData && productData.variationsData.length > 0 && !currentVariation) {
+            showError('Please select all product options before adding to cart.');
+            return;
         }
-    }
+
+        const cartItem = {
+            productId: productData.id,
+            productName: productData.productName,
+            quantity: quantity,
+            price: currentVariation ? currentVariation.price : (productData.salePrice || productData.regularPrice),
+            variations: selectedVariations,
+            image: productData.primaryImage
+        };
+
+        console.log('Adding to cart:', cartItem);
+        showError('Product added to cart!');
+    });
+
+    // Buy now functionality
+    document.getElementById('buy-now').addEventListener('click', function() {
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        if (productData.variationsData && productData.variationsData.length > 0 && !currentVariation) {
+            showError('Please select all product options before proceeding.');
+            return;
+        }
+
+        console.log('Buy now clicked');
+        showError('Redirecting to checkout...');
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+
+    // Keyboard navigation for modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
-        // Get product ID from URL or Thymeleaf
+        // Get product ID from URL
         const productId = window.location.pathname.split('/').pop();
-        fetchProductData(productId);
+
+        if (productId && productId !== 'products') {
+            fetchProductData(productId);
+        } else {
+            showError('Invalid product ID');
+        }
     });
 
 </script>
