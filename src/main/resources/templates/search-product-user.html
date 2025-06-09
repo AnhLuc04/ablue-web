@@ -96,8 +96,18 @@
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
     <div th:each="product : ${products.content}" class="bg-white shadow rounded p-4">
       <!--      <img th:src="@{${product.imageUrl}}" alt="Product" class="w-full h-40 object-cover rounded mb-2">-->
-      <h3 th:text="${product.name}" class="text-sm font-semibold"></h3>
-      <p th:text="'$' + ${product.price}" class="text-blue-600 font-bold"></p>
+<!--      <h3 th:text="${product.name}" class="text-sm font-semibold"></h3>-->
+<!--      <p th:text="'$' + ${product.price}" class="text-blue-600 font-bold"></p>-->
+      <a th:href="@{'/products/show-product' + ${product.id}}">
+        <!--                    <img th:src="@{${product.imageUrl}}" alt="Product Image" class="w-full h-48 object-cover">-->
+        <div class="p-4">
+          <h3 class="font-medium text-lg mb-2" th:text="${product.name}">Product Name</h3>
+          <p class="text-yellow-500 font-semibold mb-3" th:text="'$' + ${product.price}">Price</p>
+          <button class="w-full bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700 transition">
+            Add to Cart
+          </button>
+        </div>
+      </a>
     </div>
   </div>
 

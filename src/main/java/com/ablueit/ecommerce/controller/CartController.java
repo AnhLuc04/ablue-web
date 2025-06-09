@@ -178,6 +178,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
 
@@ -194,30 +197,29 @@ public class CartController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Helper method đọc cookie "cart" và parse ra Map<variantId, quantity>
     private Map<Long, Integer> getCartFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) return new HashMap<>();
-        for (Cookie cookie : cookies) {
-            if ("cart".equals(cookie.getName())) {
-                try {
-                    String json = cookie.getValue();
-                    if (json == null || json.isEmpty()) return new HashMap<>();
-                    return objectMapper.readValue(json, new TypeReference<Map<Long, Integer>>() {});
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return new HashMap<>();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("cart".equals(cookie.getName())) {
+                    try {
+                        String decodedJson = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8.toString());
+                        return objectMapper.readValue(decodedJson, new TypeReference<Map<Long, Integer>>() {});
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
         return new HashMap<>();
     }
 
-    // Helper method lưu giỏ hàng Map<variantId, quantity> thành cookie
+
     private void saveCartToCookie(HttpServletResponse response, Map<Long, Integer> cartMap) {
         try {
             String json = objectMapper.writeValueAsString(cartMap);
-            Cookie cookie = new Cookie("cart", json);
+            String encodedJson = URLEncoder.encode(json, StandardCharsets.UTF_8.toString());
+            Cookie cookie = new Cookie("cart", encodedJson);
             cookie.setPath("/");
             cookie.setMaxAge(60 * 60 * 24 * 7); // 7 ngày
             response.addCookie(cookie);
@@ -225,7 +227,6 @@ public class CartController {
             e.printStackTrace();
         }
     }
-
     // Hiển thị giỏ hàng: nếu user đăng nhập -> lấy từ DB, nếu không -> lấy từ cookie
     @GetMapping
     public ModelAndView showCart(Principal principal, HttpServletRequest request) {
@@ -253,10 +254,9 @@ public class CartController {
         return modelAndView;
     }
 
-    // Thêm sản phẩm vào giỏ hàng
     @PostMapping("/add")
-    public String addToCart(@RequestParam Long variantId,
-                            @RequestParam int quantity,
+    public String addToCart(@RequestParam(name = "variantId") Long variantId,
+                            @RequestParam(name = "quantity") int quantity,
                             Principal principal,
                             HttpServletRequest request,
                             HttpServletResponse response) {
@@ -352,6 +352,27 @@ public class CartController {
             return ResponseEntity.ok("Đã xóa các sản phẩm chưa chọn khỏi giỏ hàng.");
         }
     }
+    @PostMapping("/remove")
+    @ResponseBody
+    public Map<String, Object> removeFromCart(@RequestParam Long itemId, Principal principal, HttpServletRequest request, HttpServletResponse response) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            if (principal != null) {
+                User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+                cartService.removeFromCart(user, itemId);
+            } else {
+                Map<Long, Integer> cartMap = getCartFromCookie(request);
+                cartMap.remove(itemId);
+                saveCartToCookie(response, cartMap);
+            }
+            result.put("success", true);
+        } catch (Exception e) {
+            result.put("success", false);
+        }
+        return result;
+    }
+
+
     @GetMapping("/discounts")
     @ResponseBody
     public List<DiscountCode> getAllActiveDiscountsForUser() {

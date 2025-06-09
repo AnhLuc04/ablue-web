@@ -94,7 +94,7 @@
 </header>
 
 <div class="container">
-    <h1>Stores Overview</h1>
+<!--    <h1>Stores Overview</h1>-->
     <div class="table-responsive shadow-sm rounded bg-white">
         <table class="table table-striped mb-0 align-middle">
             <thead>
@@ -124,7 +124,9 @@
                           th:text="${store.enabled} ? 'Active' : 'Inactive'">Status</span>
                 </td>
                 <td>
-                    <a th:href="@{'/stores/' + ${store.id}}" class="btn btn-view btn-sm">View Details</a>
+                    <a th:href="@{'/' + ${store.id} + '/products'}" class="btn btn-view btn-sm">View Details</a>
+
+
                 </td>
             </tr>
             </tbody>

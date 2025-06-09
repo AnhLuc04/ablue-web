@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Add To Cart</title>
+</head>
+<body>
+<h1>Thêm sản phẩm vào giỏ</h1>
+<form method="post" action="http://localhost:8081/cart/add">
+  <label for="variantId">Variant ID:</label>
+  <input type="number" name="variantId" id="variantId" required><br><br>
+
+  <label for="quantity">Số lượng:</label>
+  <input type="number" name="quantity" id="quantity" required><br><br>
+
+  <button type="submit">Thêm vào giỏ</button>
+</form>
+</body>
+</html>

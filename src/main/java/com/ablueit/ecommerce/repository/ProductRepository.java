@@ -48,5 +48,25 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByStoreId(Long storeId);
 
+    // Tìm theo tên category, khoảng giá, và storeId
+    @Query("SELECT p FROM Product p JOIN p.categories c " +
+            "WHERE c.name = :categoryName AND p.price BETWEEN :min AND :max AND p.store.id = :storeId")
+    Page<Product> findByCategoryNameAndPriceBetweenAndStoreId(
+            @Param("categoryName") String categoryName,
+            @Param("min") Double min,
+            @Param("max") Double max,
+            @Param("storeId") Long storeId,
+            Pageable pageable
+    );
+
+    // Tìm theo khoảng giá và storeId
+    Page<Product> findByPriceBetweenAndStoreId(
+            Double min,
+            Double max,
+            Long storeId,
+            Pageable pageable
+    );
+
+
 
 }

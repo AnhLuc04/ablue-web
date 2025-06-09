@@ -82,4 +82,9 @@ public class Cart {
         newItem.setQuantity(quantity);
         items.add(newItem);
     }
+    public void removeItemByVariantId(Long variantId) {
+        if (items != null) {
+            items.removeIf(item -> item.getVariation().equals(variantId));
+        }
+    }
 }

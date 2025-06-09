@@ -402,5 +402,10 @@ public class CartService {
         cart.setItems(items);
         return cart;
     }
+    public void removeFromCart(User user, Long variantId) {
+        Cart cart = getCartForUser(user);
+        cart.removeItemByVariantId(variantId);
+        cartRepository.save(cart);
+    }
 
 }
