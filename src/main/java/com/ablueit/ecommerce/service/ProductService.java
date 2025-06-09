@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface ProductService {
 
-    ProductResponse addVariationProduct(ProductRequest request) throws IOException;
+    String addVariationProduct(ProductRequest request) throws IOException;
 
     ProductRequest mapToRequest(Product product);
 

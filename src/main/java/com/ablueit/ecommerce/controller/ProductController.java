@@ -184,11 +184,11 @@ public class ProductController {
         return "product-dashboard/create-variation-product";
     }
 
-
-    @PostMapping("/create-variation-product/")
-    public ResponseEntity<ProductResponse> createVariationProduct(@ModelAttribute ProductRequest request) throws IOException {
-        return ResponseEntity.ok().body(productService.addVariationProduct(request));
-    }
+//
+//    @PostMapping("/create-variation-product/")
+//    public ResponseEntity<ProductResponse> createVariationProduct(@ModelAttribute ProductRequest request) throws IOException {
+//        return ResponseEntity.ok().body(productService.addVariationProduct(request));
+//    }
 
 
     @GetMapping("/edit-variation-product/{id}")
