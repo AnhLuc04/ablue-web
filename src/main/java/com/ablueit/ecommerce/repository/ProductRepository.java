@@ -4,6 +4,7 @@ import com.ablueit.ecommerce.model.Product;
 import com.ablueit.ecommerce.model.Variation;
 import com.ablueit.ecommerce.payload.request.VariantRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,8 +32,26 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
+    @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.name = :categoryName AND p.price BETWEEN :min AND :max")
+    List<Product> findByCategoryNameAndPriceBetween(
+            @Param("categoryName") String categoryName,
+            @Param("min") Double min,
+            @Param("max") Double max
+    );
+
     Page<Product> findByPriceBetween(Double min, Double max, Pageable pageable);
 
+    List<Product> findByPriceBetween(Double min, Double max);
+
+    @Query(value = "SELECT p.* FROM product p " +
+            "LEFT JOIN product_category pc ON pc.product_id = p.product_id " +
+            "WHERE pc.category_id = :categoryId " +
+            "AND p.product_id != :currentProductId " +
+            "LIMIT :limit",
+            nativeQuery = true)
+    List<Product> findRelatedProductsByCategoryId(@Param("categoryId") Long categoryId,
+                                                  @Param("currentProductId") Long currentProductId,
+                                                  @Param("limit") int limit);
 
 
     @Query("SELECT DISTINCT p FROM Product p " +

@@ -828,31 +828,34 @@
                 apiFormData.append(`variationsData[${i}].stock`, variation.stock);
             }
         });
+// FIXED - Sửa đoạn append files trong form submission
+// Thay thế toàn bộ đoạn append files bằng code này:
 
-        // Append files with correct field names
-        const primaryImages = formData.getAll('primaryImage');
-        if (primaryImages.length > 0) {
-            primaryImages.forEach(file => {
+// Append files với đúng field names và sử dụng files trực tiếp từ input
+        const primaryImageInput = document.getElementById('primaryImage');
+        if (primaryImageInput.files.length > 0) {
+            Array.from(primaryImageInput.files).forEach(file => {
                 if (file && file.size > 0) {
                     apiFormData.append('primaryImage', file);
                 }
             });
         }
 
-        const sizeGuideImages = formData.getAll('sizeGuideImage');
-        if (sizeGuideImages.length > 0) {
-            sizeGuideImages.forEach(file => {
+        const sizeGuideImageInput = document.getElementById('sizeGuideImage');
+        if (sizeGuideImageInput.files.length > 0) {
+            Array.from(sizeGuideImageInput.files).forEach(file => {
                 if (file && file.size > 0) {
                     apiFormData.append('sizeGuideImage', file);
                 }
             });
         }
 
-        const galleryImages = formData.getAll('galleryImages');
-        if (galleryImages.length > 0) {
-            galleryImages.forEach(file => {
+// FIXED: Gallery Images - đây là đoạn quan trọng nhất
+        const galleryImagesInput = document.getElementById('galleryImages');
+        if (galleryImagesInput.files.length > 0) {
+            Array.from(galleryImagesInput.files).forEach(file => {
                 if (file && file.size > 0) {
-                    apiFormData.append('galleryImages', file);
+                    apiFormData.append('galleryImages', file); // Append từng file riêng biệt
                 }
             });
         }

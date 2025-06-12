@@ -1,13 +1,16 @@
 package com.ablueit.ecommerce.controller;
 
+import com.ablueit.ecommerce.enums.ImageType;
 import com.ablueit.ecommerce.exception.ResourceNotFoundException;
 import com.ablueit.ecommerce.model.Categories;
 import com.ablueit.ecommerce.model.Product;
+import com.ablueit.ecommerce.model.ProductImage;
 import com.ablueit.ecommerce.model.Store;
-import com.ablueit.ecommerce.model.Variation;
 import com.ablueit.ecommerce.payload.request.ProductRequest;
+import com.ablueit.ecommerce.payload.response.ProductCardResponse;
 import com.ablueit.ecommerce.payload.response.ProductResponse;
 import com.ablueit.ecommerce.repository.CategoriesRepository;
+import com.ablueit.ecommerce.repository.ProductImageRepository;
 import com.ablueit.ecommerce.repository.ProductRepository;
 import com.ablueit.ecommerce.repository.StoreRepository;
 import com.ablueit.ecommerce.service.ProductService;
@@ -15,14 +18,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class ProductController {
     CategoriesRepository categoriesRepository;
     ProductService productService;
     ProductRepository productRepository;
+    ProductImageRepository productImageRepository;
 
     @GetMapping("/search")
     public String viewProducts(
@@ -64,6 +66,14 @@ public class ProductController {
         return "search-product-user";
     }
 
+    private Page<ProductCardResponse> convertListToPage(List<ProductCardResponse> list, Pageable pageable) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), list.size());
+
+        List<ProductCardResponse> subList = list.subList(start, end);
+        return new PageImpl<>(subList, pageable, list.size());
+    }
+
     @GetMapping()
     public String listProducts(
             @RequestParam(name = "category", defaultValue = "") String category,
@@ -89,17 +99,38 @@ public class ProductController {
                 pageable = PageRequest.of(page, size);
         }
 
-        Page<Product> products;
+        Page<ProductCardResponse> productCards;
+
+        List<Product> products;
+
+        List<ProductCardResponse> cards;
+
         if (category.isEmpty()) {
-            products = productRepository.findByPriceBetween(minPrice, maxPrice, pageable);
+            products = productRepository.findByPriceBetween(minPrice, maxPrice);
         } else {
-            products = productRepository.findByCategoryNameAndPriceBetween(category, minPrice, maxPrice, pageable);
+            products = productRepository.findByCategoryNameAndPriceBetween(category, minPrice, maxPrice);
         }
 
-        model.addAttribute("products", products);
+        cards = products.stream().map(x -> {
+            ProductImage primaryImage = productImageRepository
+                    .findByImageTypeAndProduct(ImageType.PRIMARY, x);
+
+            return ProductCardResponse.builder()
+                    .id(x.getId())
+                    .name(x.getName())
+                    .price(x.getPrice())
+                    .rating(4.5)
+                    .primaryImage(primaryImage.getUrl())
+                    .totalSold(100L)
+                    .build();
+        }).toList();
+
+        productCards = convertListToPage(cards, pageable);
+
+        model.addAttribute("products", productCards);
         model.addAttribute("categories", categoriesRepository.findAll());
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", products.getTotalPages());
+        model.addAttribute("totalPages", productCards.getTotalPages());
         model.addAttribute("selectedCategory", category);
         model.addAttribute("selectedSort", sort);
         model.addAttribute("minPrice", minPrice);
@@ -138,8 +169,6 @@ public class ProductController {
     }
 
 
-
-
     @GetMapping("/create-variation-product/{id}")
     public String showCreateVariationProduct(Model model, @PathVariable(value = "id") Long storeId) {
         log.info("GET /create-variation-product/{}", storeId);
@@ -156,10 +185,8 @@ public class ProductController {
     }
 
 
-
-
     @PostMapping("/create-variation-product/")
-    public ResponseEntity<ProductResponse> createVariationProduct(@ModelAttribute  ProductRequest request) throws IOException {
+    public ResponseEntity<ProductResponse> createVariationProduct(@ModelAttribute ProductRequest request) throws IOException {
         return ResponseEntity.ok().body(productService.addVariationProduct(request));
     }
 
@@ -195,18 +222,22 @@ public class ProductController {
     }
 
 
-
     @GetMapping("/show-product/{id}")
     public String showProduct(Model model, @PathVariable Long id) throws IOException {
         log.info("GET /show-product/{}", id);
         model.addAttribute("productId", id);
         return "show-product-user";
     }
+
     @GetMapping(value = "/get-product/{id}", produces = "application/json")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {
-       log.info("GET /get-product/{}", id);
+        log.info("GET /get-product/{}", id);
         return ResponseEntity.ok().body(productService.getProduct(id));
     }
 
-
+    @GetMapping(value = "/get-related-product/{category-id}", produces = "application/json")
+    public ResponseEntity<List<ProductCardResponse>> getRelatedProduct(@PathVariable("category-id") Long id) {
+        log.info("GET /get-related-product/{}", id);
+        return ResponseEntity.ok().body(productService.getProductCardByCategory(id, 1L));
+    }
 }
