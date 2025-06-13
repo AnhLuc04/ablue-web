@@ -57,8 +57,8 @@ public class Cart {
     private Long id;
 
     // Nếu có hệ thống người dùng, có thể thêm:
-     @OneToOne
-     private User user;
+    @OneToOne
+    private User user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
@@ -81,5 +81,10 @@ public class Cart {
         newItem.setVariation(variant);
         newItem.setQuantity(quantity);
         items.add(newItem);
+    }
+    public void removeItemByVariantId(Long variantId) {
+        if (items != null) {
+            items.removeIf(item -> item.getVariation().equals(variantId));
+        }
     }
 }

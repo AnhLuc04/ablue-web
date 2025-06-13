@@ -103,9 +103,9 @@
         <div class="flex space-x-6">
             <div th:each="category : ${categories}"
                  class="min-w-[160px] bg-white rounded-lg shadow-md hover:shadow-lg transition p-4 text-center flex-shrink-0">
-<!--                <img th:src="@{https://source.unsplash.com/200x200/?category__${category.name}}"-->
-<!--                     th:alt="${category.name}"-->
-<!--                     class="w-full h-32 object-cover rounded-md mb-3">-->
+                <!--                <img th:src="@{https://source.unsplash.com/200x200/?category__${category.name}}"-->
+                <!--                     th:alt="${category.name}"-->
+                <!--                     class="w-full h-32 object-cover rounded-md mb-3">-->
                 <h3 class="text-lg font-medium" th:text="${category.name}">Category Name</h3>
             </div>
         </div>
@@ -122,7 +122,7 @@
                     <img th:src="@{${product.primaryImage}}" alt="Product Image" class="w-full h-48 object-cover">
                     <div class="p-4">
                         <h3 class="font-medium text-lg mb-2" th:text="${product.name}">Product Name</h3>
-<!--                        <p class="text-yellow-500 font-semibold mb-3" th:text="'$' + ${product.price}">Price</p>-->
+                        <!--                        <p class="text-yellow-500 font-semibold mb-3" th:text="'$' + ${product.price}">Price</p>-->
                         <button class="w-full bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700 transition">
                             Add to Cart
                         </button>

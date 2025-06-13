@@ -110,18 +110,18 @@ public class CheckoutController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping
-    public ModelAndView showCheckoutPage(HttpSession session) {
-        List<CartItemRequest> checkoutItems = (List<CartItemRequest>) session.getAttribute("checkoutItems");
-
-        if (checkoutItems == null || checkoutItems.isEmpty()) {
-            return new ModelAndView("redirect:/cart");
-        }
-
-        List<CheckoutItemView> viewItems = cartService.buildCheckoutItems(checkoutItems);
-
-        ModelAndView mav = new ModelAndView("checkout/form");
-        mav.addObject("items", viewItems);
-        return mav;
-    }
+//    @GetMapping
+//    public ModelAndView showCheckoutPage(HttpSession session) {
+//        List<CartItemRequest> checkoutItems = (List<CartItemRequest>) session.getAttribute("checkoutItems");
+//
+//        if (checkoutItems == null || checkoutItems.isEmpty()) {
+//            return new ModelAndView("redirect:/cart");
+//        }
+//
+//        List<CheckoutItemView> viewItems = cartService.buildCheckoutItems(checkoutItems);
+//
+//        ModelAndView mav = new ModelAndView("checkout/form");
+//        mav.addObject("items", viewItems);
+//        return mav;
+//    }
 }
