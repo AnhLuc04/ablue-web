@@ -28,6 +28,9 @@ public class Store extends AbstractEntity<Long> {
     @Column(nullable = false)
     String address;
 
+    @Column(unique = true, nullable = false)
+    String subdomain; // ➕ Subdomain ánh xạ như: store1, store2
+
     @ManyToOne
     User createdBy;
 
@@ -37,12 +40,6 @@ public class Store extends AbstractEntity<Long> {
     @JoinColumn(name = "seller_id")
     private User seller;
 
-//    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<Product> products = new ArrayList<>();
-
-    // Danh sách danh mục sản phẩm thuộc cửa hàng này
-
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Categories> categories;
-
 }
