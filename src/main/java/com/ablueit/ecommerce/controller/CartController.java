@@ -429,7 +429,7 @@ public class CartController {
     }
 
     @PostMapping("/add")
-            public String addToCart(@RequestParam(name = "variantId") Long variantId,
+    public String addToCart(@RequestParam(name = "variantId") Long variantId,
                             @RequestParam(name = "quantity") int quantity,
                             HttpServletRequest request,
                             HttpServletResponse response,
@@ -497,34 +497,56 @@ public class CartController {
     }
 
     // ---------- Helper Methods (cookie support) ----------
-
     private Map<Long, Integer> getCartFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
         Map<Long, Integer> cartMap = new HashMap<>();
+        Cookie[] cookies = request.getCookies();
+
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("cart".equals(cookie.getName())) {
-                    String[] items = cookie.getValue().split("\\|");
-                    for (String item : items) {
-                        String[] parts = item.split(":");
-                        if (parts.length == 2) {
-                            try {
-                                Long variantId = Long.parseLong(parts[0]);
-                                Integer quantity = Integer.parseInt(parts[1]);
-                                cartMap.put(variantId, quantity);
-                            } catch (NumberFormatException e) {
-                                // ignore invalid cookie format
+                    String cookieValue = cookie.getValue();
+                    System.out.println("🟡 Đọc cookie cart: " + cookieValue); // DEBUG
+
+                    if (cookieValue != null && !cookieValue.trim().isEmpty()) {
+                        String[] items = cookieValue.split("\\|");
+                        for (String item : items) {
+                            String[] parts = item.split(":");
+                            if (parts.length == 2) {
+                                try {
+                                    String idRaw = parts[0].trim();
+                                    String quantityRaw = parts[1].trim();
+
+                                    if (!idRaw.isEmpty() && !quantityRaw.isEmpty()) {
+                                        Long variantId = Long.parseLong(idRaw);
+                                        Integer quantity = Integer.parseInt(quantityRaw);
+                                        cartMap.put(variantId, quantity);
+                                    } else {
+                                        System.err.println("⚠️ Bỏ qua item rỗng: " + item);
+                                    }
+                                } catch (NumberFormatException e) {
+                                    System.err.println("⚠️ Lỗi parse cookie item: " + item);
+                                }
+                            } else {
+                                System.err.println("⚠️ Sai định dạng item trong cookie: " + item);
                             }
                         }
+                    } else {
+                        System.out.println("⚠️ Cookie 'cart' rỗng.");
                     }
                 }
             }
+        } else {
+            System.out.println("⚠️ Không tìm thấy bất kỳ cookie nào.");
         }
+
+        System.out.println("✅ Kết quả cartMap từ cookie: " + cartMap); // DEBUG
         return cartMap;
     }
 
+
     private void saveCartToCookie(HttpServletResponse response, Map<Long, Integer> cartMap) {
         StringBuilder cookieValue = new StringBuilder();
+
         for (Map.Entry<Long, Integer> entry : cartMap.entrySet()) {
             if (cookieValue.length() > 0) {
                 cookieValue.append("|");
@@ -532,8 +554,12 @@ public class CartController {
             cookieValue.append(entry.getKey()).append(":").append(entry.getValue());
         }
 
-        Cookie cookie = new Cookie("cart", cookieValue.toString());
+        String finalValue = cookieValue.toString();
+        System.out.println(">>>>> Ghi cookie cart: " + finalValue); // DEBUG
+
+        Cookie cookie = new Cookie("cart", finalValue);
         cookie.setPath("/");
+        cookie.setHttpOnly(true); // bảo mật hơn
         cookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
         response.addCookie(cookie);
     }

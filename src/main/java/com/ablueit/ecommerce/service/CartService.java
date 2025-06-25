@@ -265,7 +265,8 @@ public class CartService {
 
             productVariantRepository.findById(variantId).ifPresent(variant -> {
                 CartItem item = new CartItem();
-                item.setVariation(variant);
+                item.setId(variantId); // Gán ID để hiển thị (hoặc ID tạm nếu cần)
+                item.setVariation(variant); // Gán sản phẩm chi tiết
                 item.setQuantity(quantity);
                 item.setCart(null); // Không gán cart khi chưa login
                 items.add(item);
@@ -274,6 +275,7 @@ public class CartService {
 
         return items;
     }
+
 
     /**
      * ➤ Cập nhật số lượng trong cart

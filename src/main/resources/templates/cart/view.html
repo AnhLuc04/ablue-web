@@ -457,7 +457,7 @@
     </style>
 </head>
 <body>
-<freame (
+
 <div class="container cart-container mt-5 mb-5">
     <h2 class="mb-4 text-center fw-bold"><i class="bi bi-cart4 me-2"></i>Your Shopping Cart</h2>
 
@@ -514,6 +514,7 @@
                             <span class="px-2" th:id="'qty-' + ${item.id}" th:text="${item.quantity}">1</span>
                             <button class="btn btn-sm btn-outline-secondary px-2 py-0" type="button"
                                     th:onclick="'updateQuantity(' + ${item.id} + ', 1)'">+</button>
+
                         </div>
                     </td>
                     <td class="text-end fw-semibold">
@@ -561,19 +562,25 @@
 
 <script>
     function updateQuantity(itemId, change) {
-        const qtySpan = document.getElementById('qty-' + itemId);
-        let currentQty = parseInt(qtySpan.innerText);
-        const newQty = Math.max(currentQty + change, 1);
-
-        fetch('/cart/update-quantity?itemId=' + itemId + '&quantity=' + newQty, {
-            method: 'POST'
-        })
-        .then(res => {
-            if (res.ok) {
-                location.reload();
-            }
-        });
+    if (!itemId || isNaN(itemId)) {
+        console.error("Invalid itemId:", itemId);
+        return;
     }
+
+    const qtySpan = document.getElementById('qty-' + itemId);
+    let currentQty = parseInt(qtySpan.innerText);
+    const newQty = Math.max(currentQty + change, 1);
+
+    fetch('/cart/update-quantity?itemId=' + itemId + '&quantity=' + newQty, {
+        method: 'POST'
+    })
+    .then(res => {
+        if (res.ok) {
+            location.reload();
+        }
+    });
+}
+
 
     document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".btn-remove").forEach(btn => {
