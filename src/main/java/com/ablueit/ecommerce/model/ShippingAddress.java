@@ -9,27 +9,27 @@ import lombok.Setter;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ShippingAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private String firstName;
-    private String lastName;
-    private String company;
+    String fullName;
+    String phone;
+    String email;
+    String addressLine1;
+    String addressLine2;
+    String city;
+    String state;
+    String postalCode;
+    String country;
 
-    private String address1;
-    private String address2;
 
-    private String city;
-    private String state;
-    private String postcode;
-    private String country;
 }

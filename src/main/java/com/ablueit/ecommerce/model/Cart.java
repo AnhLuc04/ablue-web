@@ -1,43 +1,3 @@
-//package com.ablueit.ecommerce.model;
-//
-//
-//import com.fasterxml.jackson.annotation.JsonManagedReference;
-//import jakarta.persistence.*;
-//import lombok.*;
-//
-//import java.math.BigDecimal;
-//import java.time.LocalDateTime;
-//import java.util.ArrayList;
-//import java.util.List;
-//
-//@Entity
-//@Getter
-//@Setter
-//@NoArgsConstructor
-//@AllArgsConstructor
-//public class Cart {
-//    @Id @GeneratedValue
-//    private Long id;
-//
-//    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<CartItem> items = new ArrayList<>();
-//
-//    @OneToOne
-//    private User user;
-//
-//    // tính tổng giá trị giỏ hàng
-//    public double getTotal() {
-//        return items.stream().mapToDouble(i -> i.getProduct().getPrice() * i.getQuantity()).sum();
-//    }
-//
-//    // thêm/xoá sản phẩm
-//}
-
-
-
-
-
-
 package com.ablueit.ecommerce.model;
 
 import jakarta.persistence.*;
@@ -56,19 +16,27 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nếu có hệ thống người dùng, có thể thêm:
+    // ➤ Mỗi giỏ hàng của một người dùng (One-to-One)
     @OneToOne
     private User user;
 
+    // ➤ Mỗi Cart thuộc về một Store
+    @ManyToOne
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    // ➤ Một Cart có nhiều sản phẩm
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
+    // ➤ Tính tổng tiền
     public double getTotal() {
         return items.stream()
                 .mapToDouble(CartItem::getSubtotal)
                 .sum();
     }
 
+    // ➤ Thêm item
     public void addItem(Variation variant, int quantity) {
         for (CartItem item : items) {
             if (item.getVariation().getId().equals(variant.getId())) {
@@ -82,9 +50,9 @@ public class Cart {
         newItem.setQuantity(quantity);
         items.add(newItem);
     }
+
+    // ➤ Xóa item theo variantId
     public void removeItemByVariantId(Long variantId) {
-        if (items != null) {
-            items.removeIf(item -> item.getVariation().equals(variantId));
-        }
+        items.removeIf(item -> item.getVariation().getId().equals(variantId));
     }
 }

@@ -1,6 +1,7 @@
 package com.ablueit.ecommerce.repository;
 
 import com.ablueit.ecommerce.model.Cart;
+import com.ablueit.ecommerce.model.Store;
 import com.ablueit.ecommerce.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,4 +11,6 @@ import java.util.Optional;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, Long> {
     Optional<Cart> findByUser(User user); // <-- thêm dòng này
+    Optional<Cart> findByUserAndStore(User user, Store store);
+
 }

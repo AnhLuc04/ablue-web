@@ -7,12 +7,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-
+import com.ablueit.ecommerce.model.CodeCoupon;
 @Getter
 @Setter
 @Entity
@@ -61,8 +58,16 @@ public class User extends AbstractEntity<Long> implements UserDetails {
                 .map(role -> (GrantedAuthority) role::getName)
                 .collect(Collectors.toSet());
     }
-    @OneToMany(mappedBy = "user")
-    private List<DiscountCode> discountCodes;
+    // Người dùng có nhiều địa chỉ (nếu dùng Address là entity)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
+
+    // Người dùng có nhiều đơn hàng
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "allowedUsers")
+    private Set<CodeCoupon> coupons = new HashSet<>();
 
     @Override
     public boolean isAccountNonExpired() {

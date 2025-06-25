@@ -1,6 +1,7 @@
 package com.ablueit.ecommerce.repository;
 
 import com.ablueit.ecommerce.model.Product;
+import com.ablueit.ecommerce.model.Store;
 import com.ablueit.ecommerce.model.Variation;
 import com.ablueit.ecommerce.payload.request.VariantRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -85,6 +86,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Long storeId,
             Pageable pageable
     );
+
+
+
+
+
+    // ➕ Phương thức cho trang chủ của từng Store
+    List<Product> findTop8ByStoreOrderBySalesCountDesc(Store store);
+    // 👉 Cho store con (lọc theo khoảng giá và store)
+    Page<Product> findByPriceBetweenAndStore(Double minPrice, Double maxPrice, Store store, Pageable pageable);
+
+
+
+
+    Page<Product> searchProductsByStore(String keyword, String category, Double maxPrice, String sort, Store store, Pageable pageable);
+
+
+
 
 
 

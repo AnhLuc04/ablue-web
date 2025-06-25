@@ -73,16 +73,15 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variation_id")
     private Variation variation;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User user; // ❗️ Trường này bắt buộc phải có
 
     @Transient
     private Double subtotal;
 
-    public Double getSubtotal() {
-        if (variation != null) {
-            double price = variation.getSalePrice() > 0 ? variation.getSalePrice() : variation.getPrice();
-            return price * quantity;
-        }
-        return 0.0;
+    public double getSubtotal() {
+        if (variation == null || variation.getSalePrice() == null) return 0.0;
+        return quantity * variation.getSalePrice();
     }
-
 }
+

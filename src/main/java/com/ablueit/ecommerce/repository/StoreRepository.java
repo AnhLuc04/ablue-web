@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Long> {
@@ -17,6 +18,9 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     boolean existsByName(String name);
     boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
-    Store findBySubdomainIgnoreCase(String subdomain);
+    @Query("SELECT s FROM Store s WHERE s.domain = :domain")
+    Optional<Store> findByDomainJPQL(@Param("domain") String domain);
+        Optional<Store> findByDomain(String domain);
+
 
 }

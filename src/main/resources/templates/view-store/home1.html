@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyShop – Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 font-sans antialiased">
+
+<!-- Navbar -->
+<header class="border-b sticky top-0 bg-white z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <a href="/" class="flex items-center space-x-2 text-xl font-bold text-gray-800">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
+                 viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v4H3V4zm0 6h18v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z" />
+            </svg>
+            <span>MyShop</span>
+        </a>
+
+        <!-- Search -->
+        <form action="/products/search" method="get" class="flex-1 mx-6 relative">
+            <input type="text" name="keyword"
+                   class="w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Search for products...">
+            <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1016.65 2a7.5 7.5 0 000 15z" />
+                </svg>
+            </button>
+        </form>
+
+        <!-- Navigation -->
+        <nav class="flex items-center space-x-6 text-sm">
+            <a href="/" class="hover:text-blue-600">Home</a>
+            <a href="/products" class="hover:text-blue-600">Products</a>
+
+            <a href="/cart" class="relative hover:text-blue-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13l-1.5-7M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
+                </svg>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">3</span>
+            </a>
+            <a href="/login" class="hover:text-blue-600">Login</a>
+        </nav>
+    </div>
+</header>
+
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+    <div class="max-w-7xl mx-auto px-6 py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="space-y-6">
+            <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
+                Discover <span class="text-yellow-300">top products</span> at MyShop
+            </h1>
+            <p class="text-lg">
+                Explore a curated selection of premium goods from trusted vendors.
+            </p>
+            <div class="flex space-x-4">
+                <a href="/products"
+                   class="bg-white text-blue-700 font-medium px-6 py-3 rounded-md shadow hover:bg-gray-100 transition">
+                    Shop Now
+                </a>
+                <a href="/stores"
+                   class="bg-transparent border border-white text-white px-6 py-3 rounded-md hover:bg-white hover:text-blue-700 transition">
+                    View Stores
+                </a>
+            </div>
+        </div>
+        <div class="hidden lg:block">
+            <div class="bg-white rounded-lg p-8 shadow-md text-center">
+                <svg class="w-32 h-32 mx-auto text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13l-1.5-7M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
+                </svg>
+                <p class="mt-6 text-lg font-semibold text-gray-800">
+                    Fast. Reliable. Affordable.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories -->
+<section class="max-w-7xl mx-auto px-6 py-20">
+    <h2 class="text-2xl font-semibold text-center mb-10">Browse by Category</h2>
+    <div class="overflow-x-auto">
+        <div class="flex gap-6">
+            <div th:each="category : ${categories}"
+                 class="min-w-[150px] bg-white border rounded-md p-4 shadow-sm hover:shadow-md transition text-center">
+                <h3 class="text-base font-medium" th:text="${category.name}">Category Name</h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="bg-gray-50 py-20">
+    <div class="max-w-7xl mx-auto px-6">
+        <h2 class="text-2xl font-semibold text-center mb-10">Featured Products</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div th:each="product : ${products}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition">
+                <a th:href="@{'/products/show-product/' + ${product.id}}">
+                    <img th:src="@{${product.primaryImage}}" alt="Product Image"
+                         class="w-full h-48 object-cover rounded-t-md">
+                    <div class="p-4 space-y-2">
+                        <h3 class="text-base font-medium" th:text="${product.name}">Product Name</h3>
+                        <button class="block w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+                            Add to Cart
+                        </button>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-gray-400 py-8">
+    <div class="max-w-7xl mx-auto px-6 text-center space-y-4">
+        <p>&copy; 2025 MyShop. All rights reserved.</p>
+        <div class="space-x-4 text-sm">
+            <a href="#" class="hover:text-white">Privacy Policy</a>
+            <a href="#" class="hover:text-white">Terms of Service</a>
+            <a href="#" class="hover:text-white">Contact Us</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
