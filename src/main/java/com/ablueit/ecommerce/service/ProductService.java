@@ -23,4 +23,8 @@ public interface ProductService {
     List<ProductCardResponse> getProductCardByCategory(Long categoryId, Long productId);
 
     Page<Product> searchProducts(String keyword, String category, Double maxPrice, String sort, Pageable pageable);
+
+    ProductResponse updateProduct(ProductRequest request, Long productId) throws IOException;
+
+    void deleteProduct(Long productId);
 }

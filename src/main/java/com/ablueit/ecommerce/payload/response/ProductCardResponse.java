@@ -13,7 +13,9 @@ public class ProductCardResponse {
     String name;
     Double price;
     Long totalSold;
+    Long stockQuantity;
     Double rating;
+    String stockStatus;
     String productUrl;
     String primaryImage;
 }

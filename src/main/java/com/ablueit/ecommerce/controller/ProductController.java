@@ -1,6 +1,7 @@
 package com.ablueit.ecommerce.controller;
 
 import com.ablueit.ecommerce.enums.ImageType;
+import com.ablueit.ecommerce.enums.StockStatus;
 import com.ablueit.ecommerce.exception.ResourceNotFoundException;
 import com.ablueit.ecommerce.model.Categories;
 import com.ablueit.ecommerce.model.Product;
@@ -19,13 +20,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -140,6 +144,47 @@ public class ProductController {
         return "product-list-user";
     }
 
+    @GetMapping("/{id}/list-product")
+    public ResponseEntity<List<ProductCardResponse>> listProduct(@RequestParam(defaultValue = "0") int page,
+                                                                 @RequestParam(defaultValue = "0") int size,
+                                                                 @RequestParam(defaultValue = "0") String status,
+                                                                 @RequestParam(defaultValue = "0") String search,
+                                                                 @RequestParam(defaultValue = "0") Long categoryId,
+                                                                 @PathVariable Long id) {
+        Page<ProductCardResponse> productCards;
+
+        List<Product> products;
+
+        List<ProductCardResponse> cards;
+
+//        Categories category = categoriesRepository.findById(categoryId).orElseThrow();
+
+        Store store = storeRepository.findById(id).orElseThrow();
+
+        if (categoryId == 0) {
+            products = productRepository.findAllByStore(store);
+        } else {
+            products = productRepository.findAllByCategoryId(categoryId);
+        }
+
+        cards = products.stream().filter(x -> x.getIsDeleted() == false).map(x -> {
+            ProductImage primaryImage = productImageRepository
+                    .findByImageTypeAndProduct(ImageType.PRIMARY, x);
+
+            return ProductCardResponse.builder()
+                    .id(x.getId())
+                    .name(x.getName())
+                    .price(x.getPrice())
+                    .rating(4.5)
+                    .stockQuantity(x.getStockQuantity().longValue())
+                    .stockStatus(StockStatus.IN_STOCK.name())
+                    .primaryImage(primaryImage.getUrl())
+                    .totalSold(100L)
+                    .build();
+        }).toList();
+
+        return ResponseEntity.ok(cards);
+    }
 
     @GetMapping("/{id}")
     public String viewProductList(
@@ -168,6 +213,26 @@ public class ProductController {
         return "product-dashboard/product-list";
     }
 
+//    @GetMapping("/get-product/{id}")
+//    public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) {
+//
+//        Product product = productRepository.findById(id).orElseThrow();
+//
+//        ProductResponse productResponse = ProductResponse.builder()
+//                .productName(product.getName())
+//                .storeId(product.getStore().getId())
+//                .productDescription(product.getDescription())
+//                .productShortDescription(product.getShortDescription())
+//                .regularPrice(product.getRegularPrice())
+//                .salePrice(product.getSalePrice())
+//                .category(product.getCategories().stream().map(Categories::getName).collect(Collectors.joining()))
+//                .sku(product.getSku())
+//                .stockQuantity(Long.valueOf(product.getStockQuantity()))
+//                .backorders(product.getBackOrderAllowed().toString())
+//                .primaryImage(product.getP)
+//                .build();
+//
+//    }
 
     @GetMapping("/create-variation-product/{id}")
     public String showCreateVariationProduct(Model model, @PathVariable(value = "id") Long storeId) {
@@ -239,5 +304,33 @@ public class ProductController {
     public ResponseEntity<List<ProductCardResponse>> getRelatedProduct(@PathVariable("category-id") Long id) {
         log.info("GET /get-related-product/{}", id);
         return ResponseEntity.ok().body(productService.getProductCardByCategory(id, 1L));
+    }
+
+    @GetMapping(value = "/dashboard/{id}")
+    public String productDashboard(Model model, @PathVariable String id) {
+        return "product-dashboard/product-dashboard";
+    }
+
+    @GetMapping(value = "/{storeId}/edit-product/{id}")
+    public String editProduct(Model model, @PathVariable(name = "id") Long productId,
+                              @PathVariable Long storeId) {
+        return "product-dashboard/edit-product";
+    }
+
+    @PostMapping(value = "/edit/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable Long productId,
+            @ModelAttribute ProductRequest request) throws IOException {
+        return ResponseEntity.ok().body(productService.updateProduct(request, productId));
+    }
+
+    @DeleteMapping(value = "/delete/{productId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long productId,
+            @ModelAttribute ProductRequest request) throws IOException {
+
+        productService.deleteProduct(productId);
+
+        return ResponseEntity.noContent().build();
     }
 }

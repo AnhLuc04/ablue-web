@@ -88,6 +88,9 @@ public class Product extends AuditEntity<Long> {
     @Column(name = "rating_count")
     Integer ratingCount;
 
+    @Column(name = "is_deleted")
+    Boolean isDeleted = Boolean.FALSE;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     List<ProductImage> productImages;

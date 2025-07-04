@@ -13,6 +13,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductResponse {
 
+    Long productId;
     Long storeId;
     String productName;
     String productDescription;
@@ -28,5 +29,4 @@ public class ProductResponse {
     String primaryImage;
     String sizeGuideImage;
     List<String> galleryImages;
-
 }

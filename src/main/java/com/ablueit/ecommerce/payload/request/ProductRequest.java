@@ -10,6 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class ProductRequest {
     String name;
     String description;

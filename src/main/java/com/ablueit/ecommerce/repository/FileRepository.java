@@ -35,7 +35,7 @@ public class FileRepository {
         Path folder = Paths.get(SAVED_IMAGE_PATH);
 
         String fileExtension = StringUtils
-                .getFilenameExtension(file.getOriginalFilename());
+                .getFilenameExtension(Objects.isNull(file.getOriginalFilename()) ? "" : file.getOriginalFilename());
 
         String fileName = Objects.isNull(fileExtension)
                 ? UUID.randomUUID().toString()

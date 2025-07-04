@@ -1,6 +1,7 @@
 package com.ablueit.ecommerce.repository;
 
 import com.ablueit.ecommerce.model.Product;
+import com.ablueit.ecommerce.model.Store;
 import com.ablueit.ecommerce.model.Variation;
 import com.ablueit.ecommerce.payload.request.VariantRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,11 +19,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsBySku(String sku);
     List<Product> findByNameContainingIgnoreCase(String keyword);
     List<Product> findTop8ByOrderBySalesCountDesc(); // 👈 Top 8 sản phẩm bán chạy
-    Optional<Product> findById(Long aLong);
+    Optional<Product> findById(Long id);
     Page<Product> findByStoreId(Long storeId, Pageable pageable);
     Optional<Product> findBySku(String sku);
 
     Page<Product> findByPriceBetween(int min, int max, Pageable pageable);
+
+    List<Product> findAllByStore(Store store);
 
     @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.name = :categoryName AND p.price BETWEEN :min AND :max")
     Page<Product> findByCategoryNameAndPriceBetween(
@@ -38,6 +41,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("min") Double min,
             @Param("max") Double max
     );
+
+    @Query(value = "SELECT p.* FROM product p JOIN product_category pc ON p.product_id = pc.product_id WHERE pc.category_id = :categoryId", nativeQuery = true)
+    List<Product> findAllByCategoryId(@Param("categoryId") Long categoryId);
+
+
 
     Page<Product> findByPriceBetween(Double min, Double max, Pageable pageable);
 

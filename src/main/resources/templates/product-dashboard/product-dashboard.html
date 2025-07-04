@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Product Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+        .sidebar.collapsed .logo-text {
+            display: none;
+        }
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+        }
+        .product-image {
+            height: 60px;
+            width: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .status-badge {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .active-status {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .inactive-status {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .backorder-status {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .rich-text-editor {
+            min-height: 150px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+        }
+        .image-upload-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.375rem;
+            border: 1px dashed #d1d5db;
+        }
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        .error-border {
+            border-color: #dc2626 !important;
+        }
+        .image-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 40;
+                display: none;
+            }
+            .overlay.open {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white shadow-md w-64 flex-shrink-0 flex flex-col">
+        <div class="p-4 flex items-center border-b">
+            <div class="w-10 h-10 rounded-md bg-indigo-600 flex items-center justify-center">
+                <i class="fas fa-store text-white text-xl"></i>
+            </div>
+            <span class="logo-text ml-3 text-xl font-semibold text-gray-800">ShopManager</span>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+            <nav class="px-3 py-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="nav-item flex items-center px-3 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md">
+                            <i class="fas fa-chart-pie text-lg"></i>
+                            <span class="nav-text ml-3">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded-md">
+                            <i class="fas fa-boxes text-lg"></i>
+                            <span class="nav-text ml-3">Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center px-3 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md">
+                            <i class="fas fa-shopping-cart text-lg"></i>
+                            <span class="nav-text ml-3">Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center px-3 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md">
+                            <i class="fas fa-warehouse text-lg"></i>
+                            <span class="nav-text ml-3">Inventory</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center px-3 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md">
+                            <i class="fas fa-tag text-lg"></i>
+                            <span class="nav-text ml-3">Promotions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center px-3 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md">
+                            <i class="fas fa-cog text-lg"></i>
+                            <span class="nav-text ml-3">Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="p-4 border-t">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-user text-gray-600"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-800">John Doe</p>
+                    <p class="text-xs text-gray-500">Admin</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sidebar toggle -->
+    <div class="overlay" id="overlay"></div>
+    <button class="md:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 text-white shadow-lg flex items-center justify-center z-30" id="mobileMenuToggle">
+        <i class="fas fa-bars text-xl"></i>
+    </button>
+
+    <!-- Main content -->
+    <div class="flex-1 overflow-auto">
+        <!-- Topbar -->
+        <header class="bg-white shadow-sm">
+            <div class="px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center">
+                    <button class="mr-4 text-gray-500 md:hidden" id="sidebarToggle">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-semibold text-gray-800">Product Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button class="p-2 text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-600"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content area -->
+        <main class="p-4">
+            <!-- Filters and actions -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Search products..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <select id="statusFilter" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">All Status</option>
+                            <option value="IN_STOCK">In Stock</option>
+                            <option value="OUT_OF_STOCK">Out of Stock</option>
+                            <option value="ON_BACK_ORDER">On Backorder</option>
+                        </select>
+                        <select id="categoryFilter" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">All Categories</option>
+                        </select>
+                        <button id="clearFilters" class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-times mr-1"></i>Clear
+                        </button>
+                        <button id="addProductBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span>Add Product</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products table -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="productTable">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="productTableBody">
+                        <!-- Products will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button id="prevPageMobile" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </button>
+                        <button id="nextPageMobile" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </button>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700" id="paginationInfo">
+                                Showing <span class="font-medium">1</span> to <span class="font-medium">0</span> of <span class="font-medium">0</span> results
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination" id="paginationNav">
+                                <!-- Pagination will be populated here -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Product Edit Modal -->
+    <div class="fixed inset-0 overflow-y-auto z-50 hidden" id="productModal">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Add New Product</h3>
+                                <button class="text-gray-400 hover:text-gray-500" id="closeModal">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <form id="productForm" enctype="multipart/form-data">
+                                    <!-- Error Message -->
+                                    <div id="errorMessage" class="error-message hidden p-4 mb-6 rounded">
+                                        <div class="flex">
+                                            <div class="flex-shrink-0"><i class="fas fa-exclamation-circle"></i></div>
+                                            <div class="ml-3">
+                                                <p id="errorText" class="text-sm"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Basic Product Info -->
+                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        <div>
+                                            <label for="productName" class="block text-sm font-medium text-gray-700">Product Name</label>
+                                            <input type="text" name="name" id="productName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                        </div>
+                                        <div>
+                                            <label for="productSKU" class="block text-sm font-medium text-gray-700">SKU</label>
+                                            <input type="text" name="sku" id="productSKU" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-6">
+                                        <label for="productDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                                        <textarea id="productDescription" name="description" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="4"></textarea>
+                                    </div>
+
+                                    <div class="mt-6">
+                                        <label for="shortDescription" class="block text-sm font-medium text-gray-700">Short Description</label>
+                                        <textarea id="shortDescription" name="shortDescription" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="2"></textarea>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-6">
+                                        <div>
+                                            <label for="price" class="block text-sm font-medium text-gray-700">Regular Price</label>
+                                            <div class="mt-1 relative rounded-md shadow-sm">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                                </div>
+                                                <input type="number" name="regularPrice" id="price" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="0.00" step="0.01" required>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label for="discountPrice" class="block text-sm font-medium text-gray-700">Sale Price</label>
+                                            <div class="mt-1 relative rounded-md shadow-sm">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                                </div>
+                                                <input type="number" name="salePrice" id="discountPrice" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="0.00" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label for="stock" class="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                                            <input type="number" name="stockQuantity" id="stock" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                                        <div class="relative">
+                                            <label for="categoryDisplay" class="block text-sm font-medium text-gray-700">Category</label>
+                                            <input type="hidden" id="categoryIdHidden" name="categoryId" value="">
+                                            <input type="text" id="categoryDisplay" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Select a category" readonly required>
+                                            <div id="categoryDropdown" class="absolute z-10 hidden w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"></div>
+                                        </div>
+                                        <div>
+                                            <label for="stockStatus" class="block text-sm font-medium text-gray-700">Stock Status</label>
+                                            <select id="stockStatus" name="stockStatus" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                <option value="IN_STOCK">In Stock</option>
+                                                <option value="OUT_OF_STOCK">Out of Stock</option>
+                                                <option value="ON_BACK_ORDER">On Backorder</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-6">
+                                        <label class="block text-sm font-medium text-gray-700">Primary Image</label>
+                                        <input type="file" id="primaryImage" name="primaryImage" accept="image/*" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        <div id="primaryImagePreview" class="mt-2 flex flex-wrap gap-2"></div>
+                                    </div>
+
+                                    <div class="mt-6">
+                                        <label class="block text-sm font-medium text-gray-700">Gallery Images</label>
+                                        <input type="file" id="galleryImages" name="galleryImages" accept="image/*" multiple class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        <div id="galleryImagesPreview" class="mt-2 flex flex-wrap gap-2"></div>
+                                    </div>
+
+                                    <input type="hidden" id="productId" name="productId">
+                                    <input type="hidden" id="storeId" name="storeId" value="">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="saveProduct" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <span id="saveButtonText">Save Changes</span>
+                        <div id="saveButtonSpinner" class="loading-spinner ml-2 hidden"></div>
+                    </button>
+                    <button type="button" id="cancelModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="fixed bottom-4 right-4 hidden z-50" id="toast">
+        <div class="bg-green-500 text-white px-4 py-2 rounded-md shadow-lg flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span id="toastMessage">Product updated successfully!</span>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="fixed bottom-4 right-4 hidden z-50" id="errorToast">
+        <div class="bg-red-500 text-white px-4 py-2 rounded-md shadow-lg flex items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span id="errorToastMessage">An error occurred!</span>
+        </div>
+    </div>
+</div>
+<script>
+    // Utility Functions
+    const $ = (selector, context = document) => context.querySelector(selector);
+    const $$ = (selector, context = document) => Array.from(context.querySelectorAll(selector));
+
+    // Configuration - Dynamic Store ID from URL
+    const apiBaseUrl = 'http://localhost:8081';
+    const getStoreIdFromUrl = () => {
+        const pathParts = window.location.pathname.split('/');
+        const dashboardIndex = pathParts.indexOf('dashboard');
+        return dashboardIndex !== -1 && pathParts[dashboardIndex + 1] ?
+            parseInt(pathParts[dashboardIndex + 1]) : 1;
+    };
+
+    const storeId = getStoreIdFromUrl();
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    let totalItems = 0;
+    let totalPages = 0;
+    let categoriesData = [];
+    let productsData = [];
+    let searchTimeout;
+    let currentFilters = {
+        search: '',
+        status: '',
+        categoryId: ''
+    };
+
+    // Error Handling & Notifications
+    const showError = (message) => {
+        $('#errorText').textContent = message;
+        $('#errorMessage').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const hideError = () => $('#errorMessage').classList.add('hidden');
+
+    const showToast = (message, type = 'success') => {
+        const toast = type === 'success' ? $('#toast') : $('#errorToast');
+        const messageElement = type === 'success' ? $('#toastMessage') : $('#errorToastMessage');
+
+        messageElement.textContent = message;
+        toast.classList.remove('hidden');
+
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 4000);
+    };
+
+    const showErrorToast = (message) => showToast(message, 'error');
+
+    // Loading States
+    const setLoadingState = (element, isLoading, originalText = '') => {
+        if (isLoading) {
+            element.disabled = true;
+            element.innerHTML = `<div class="loading-spinner mr-2"></div>Loading...`;
+        } else {
+            element.disabled = false;
+            element.innerHTML = originalText;
+        }
+    };
+
+    // API Helper Functions
+    const apiRequest = async (url, options = {}) => {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API Request Error:', error);
+            throw error;
+        }
+    };
+
+    // Fetch Categories
+    const fetchCategories = async () => {
+        try {
+            const categories = await apiRequest(`${apiBaseUrl}/category/${storeId}/list-category/`);
+
+            if (Array.isArray(categories)) {
+                categoriesData = categories.map(cat => ({
+                    id: cat.id,
+                    name: cat.name || 'Unnamed Category'
+                }));
+                return categoriesData;
+            } else {
+                console.error('Categories response is not an array:', categories);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            showErrorToast('Unable to load categories');
+            return [];
+        }
+    };
+
+    // Populate Category Filter
+    const populateCategoryFilter = async () => {
+        const categories = await fetchCategories();
+        const select = $('#categoryFilter');
+
+        select.innerHTML = '<option value="">All Categories</option>';
+
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+        });
+    };
+
+    // Category Selection System
+    const setupCategorySelection = () => {
+        const categoryDisplay = $('#categoryDisplay');
+        const categoryDropdown = $('#categoryDropdown');
+        const categoryIdHidden = $('#categoryIdHidden');
+
+        categoryDisplay.addEventListener('click', () => {
+            if (categoriesData.length > 0) {
+                populateCategoryDropdown();
+                categoryDropdown.classList.remove('hidden');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!categoryDisplay.contains(e.target) && !categoryDropdown.contains(e.target)) {
+                categoryDropdown.classList.add('hidden');
+            }
+        });
+
+        categoryDisplay.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            populateCategoryDropdown(searchTerm);
+            categoryDropdown.classList.remove('hidden');
+        });
+    };
+
+    const populateCategoryDropdown = (searchTerm = '') => {
+        const categoryDropdown = $('#categoryDropdown');
+        const filteredCategories = categoriesData.filter(cat =>
+            cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        categoryDropdown.innerHTML = '';
+
+        if (filteredCategories.length === 0) {
+            categoryDropdown.innerHTML = '<div class="px-4 py-2 text-gray-500">No categories found</div>';
+            return;
+        }
+
+        filteredCategories.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer';
+            div.textContent = cat.name;
+            div.dataset.categoryId = cat.id;
+            div.dataset.categoryName = cat.name;
+            div.addEventListener('click', () => {
+                selectCategory(cat.id, cat.name);
+            });
+            categoryDropdown.appendChild(div);
+        });
+    };
+
+    const selectCategory = (id, name) => {
+        $('#categoryDisplay').value = name;
+        $('#categoryIdHidden').value = id;
+        $('#categoryDropdown').classList.add('hidden');
+    };
+
+    // Enhanced Fetch Products with Better Error Handling
+    const fetchProducts = async (page = 1, search = '', status = '', categoryId = '1') => {
+        try {
+            // Show loading state
+            const tableBody = $('#productTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-2"></div>
+                        <p class="text-gray-500">Loading products...</p>
+                    </td>
+                </tr>
+            `;
+
+            const params = new URLSearchParams({
+                page: page - 1,
+                size: itemsPerPage
+            });
+
+            // Add filters only if they have values
+            if (search.trim()) params.append('search', search.trim());
+            if (status) params.append('status', status);
+            if (categoryId) params.append('categoryId', categoryId);
+
+            const data = await apiRequest(`${apiBaseUrl}/products/${storeId}/list-product?${params}`);
+
+            if (Array.isArray(data)) {
+                productsData = data.map(product => ({
+                    id: product.id,
+                    name: product.name || 'Unnamed Product',
+                    price: parseFloat(product.price) || 0,
+                    salePrice: product.salePrice ? parseFloat(product.salePrice) : null,
+                    stock: parseInt(product.stockQuantity) || 0,
+                    status: product.stockStatus || 'OUT_OF_STOCK',
+                    image: product.primaryImage || 'https://via.placeholder.com/60x60?text=No+Image',
+                    sku: product.sku || `SKU-${product.id}`,
+                    categoryId: product.categoryId,
+                    categoryName: product.categoryName || 'Uncategorized',
+                    description: product.description || '',
+                    shortDescription: product.shortDescription || '',
+                    updated: product.updatedAt ?
+                        new Date(product.updatedAt).toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        }) :
+                        new Date().toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        })
+                }));
+
+                // Update pagination info (adjust if API provides pagination metadata)
+                totalItems = data.length; // Replace with actual total from API if available
+                totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            } else {
+                console.error('Products response is not an array:', data);
+                productsData = [];
+                totalItems = 0;
+                totalPages = 0;
+            }
+
+            renderProducts();
+            renderPagination();
+
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            showErrorToast(`Unable to load products: ${error.message}`);
+
+            // Show error state
+            const tableBody = $('#productTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-8">
+                        <div class="text-red-500 mb-2">
+                            <i class="fas fa-exclamation-triangle text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500">Failed to load products</p>
+                        <button onclick="fetchProducts()" class="mt-2 text-indigo-600 hover:text-indigo-800">
+                            <i class="fas fa-redo mr-1"></i>Try Again
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    };
+
+    // Enhanced Render Products
+    const renderProducts = () => {
+        const tbody = $('#productTableBody');
+
+        if (!productsData || productsData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-12">
+                        <div class="text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg font-medium">No products found</p>
+                            <p class="text-sm">Try adjusting your search or filters</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        productsData.forEach(product => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 transition-colors';
+            tr.dataset.productId = product.id;
+
+            // Determine status display and class
+            let statusClass = 'inactive-status';
+            let statusText = 'Out of Stock';
+
+            if (product.status === 'IN_STOCK') {
+                statusClass = 'active-status';
+                statusText = 'In Stock';
+            } else if (product.status === 'ON_BACK_ORDER') {
+                statusClass = 'backorder-status';
+                statusText = 'On Backorder';
+            }
+
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                            <img class="product-image" src="${product.image}" alt="${product.name}"
+                                 onerror="this.src='https://via.placeholder.com/60x60?text=No+Image'">
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900 truncate max-w-xs" title="${product.name}">
+                                ${product.name}
+                            </div>
+                            <div class="text-sm text-gray-500">SKU: ${product.sku}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">$${product.price.toFixed(2)}</div>
+                    ${product.salePrice ? `<div class="text-sm text-gray-500 line-through">$${product.salePrice.toFixed(2)}</div>` : ''}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${product.stock}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${product.updated}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="${apiBaseUrl}/products/${storeId}/edit-product/${product.id}" class="edit-product text-indigo-600 hover:text-indigo-900 mr-3 p-1 rounded"
+                            title="Edit Product">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="delete-product text-red-600 hover:text-red-900 p-1 rounded"
+                            data-id="${product.id}" title="Delete Product">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    };
+
+    // Enhanced Render Pagination
+    const renderPagination = () => {
+        const nav = $('#paginationNav');
+        nav.innerHTML = '';
+
+        if (totalPages <= 1) {
+            $('#paginationInfo').innerHTML = `Showing <span class="font-medium">${totalItems}</span> results`;
+            return;
+        }
+
+        // Previous Button
+        const prev = document.createElement('button');
+        prev.className = `relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`;
+        prev.innerHTML = '<span class="sr-only">Previous</span><i class="fas fa-chevron-left"></i>';
+        if (currentPage > 1) {
+            prev.addEventListener('click', () => changePage(currentPage - 1));
+        }
+        nav.appendChild(prev);
+
+        // Page Numbers (show max 7 pages)
+        const startPage = Math.max(1, currentPage - 3);
+        const endPage = Math.min(totalPages, startPage + 6);
+
+        // Add first page if not in range
+        if (startPage > 1) {
+            const firstPage = createPageButton(1);
+            nav.appendChild(firstPage);
+
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+                ellipsis.textContent = '...';
+                nav.appendChild(ellipsis);
+            }
+        }
+
+        // Add page numbers in range
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = createPageButton(i);
+            nav.appendChild(pageBtn);
+        }
+
+        // Add last page if not in range
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+                ellipsis.textContent = '...';
+                nav.appendChild(ellipsis);
+            }
+
+            const lastPage = createPageButton(totalPages);
+            nav.appendChild(lastPage);
+        }
+
+        // Next Button
+        const next = document.createElement('button');
+        next.className = `relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`;
+        next.innerHTML = '<span class="sr-only">Next</span><i class="fas fa-chevron-right"></i>';
+        if (currentPage < totalPages) {
+            next.addEventListener('click', () => changePage(currentPage + 1));
+        }
+        nav.appendChild(next);
+
+        // Update Pagination Info
+        const start = (currentPage - 1) * itemsPerPage + 1;
+        const end = Math.min(currentPage * itemsPerPage, totalItems);
+        $('#paginationInfo').innerHTML = `Showing <span class="font-medium">${start}</span> to <span class="font-medium">${end}</span> of <span class="font-medium">${totalItems}</span> results`;
+    };
+
+    const createPageButton = (pageNum) => {
+        const button = document.createElement('button');
+        button.className = `relative inline-flex items-center px-4 py-2 border text-sm font-medium ${pageNum === currentPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`;
+        button.textContent = pageNum;
+        button.addEventListener('click', () => changePage(pageNum));
+        return button;
+    };
+
+    const changePage = (page) => {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        fetchProducts(currentPage, currentFilters.search, currentFilters.status, currentFilters.categoryId);
+    };
+
+    // Enhanced Search and Filter Functions
+    const debouncedSearch = (callback, delay = 500) => {
+        return (...args) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => callback.apply(this, args), delay);
+        };
+    };
+
+    const handleSearch = debouncedSearch((searchValue) => {
+        currentFilters.search = searchValue;
+        currentPage = 1;
+        fetchProducts(currentPage, currentFilters.search, currentFilters.status, currentFilters.categoryId);
+    });
+
+    const handleStatusFilter = (status) => {
+        currentFilters.status = status;
+        currentPage = 1;
+        fetchProducts(currentPage, currentFilters.search, currentFilters.status, currentFilters.categoryId);
+    };
+
+    const handleCategoryFilter = (categoryId) => {
+        currentFilters.categoryId = categoryId;
+        currentPage = 1;
+        fetchProducts(currentPage, currentFilters.search, currentFilters.status, currentFilters.categoryId);
+    };
+
+    const clearFilters = () => {
+        $('#searchInput').value = '';
+        $('#statusFilter').value = '';
+        $('#categoryFilter').value = '';
+        currentFilters = { search: '', status: '', categoryId: '' };
+        currentPage = 1;
+        fetchProducts();
+    };
+
+    // Enhanced Delete Product Function
+    // Fixed Delete Product Function
+    const deleteProduct = async (productId) => {
+        if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
+
+        try {
+            const deleteBtn = $(`.delete-product[data-id="${productId}"]`);
+            const originalHtml = deleteBtn.innerHTML;
+
+            // Show loading state
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            deleteBtn.disabled = true;
+
+            const response = await fetch(`${apiBaseUrl}/products/delete/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            // FIXED: Check if response has content before parsing JSON
+            let result = null;
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                const text = await response.text();
+                if (text.trim()) {
+                    result = JSON.parse(text);
+                }
+            }
+
+            // Remove product from local data
+            productsData = productsData.filter(p => p.id !== parseInt(productId));
+            totalItems = Math.max(0, totalItems - 1);
+
+            // Re-render table
+            renderProducts();
+            renderPagination();
+
+            showToast('Product deleted successfully!');
+
+            // If current page is empty and not the first page, go to previous page
+            if (productsData.length === 0 && currentPage > 1) {
+                changePage(currentPage - 1);
+            }
+
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            showError(`Failed to delete product: ${error.message}`);
+
+            // Restore button state
+            const deleteBtn = $(`.delete-product[data-id="${productId}"]`);
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.disabled = false;
+            }
+        }
+    };
+
+
+    // Image Preview Functions
+    const setupImagePreview = (inputId, previewId) => {
+        const input = $(`#${inputId}`);
+        const preview = $(`#${previewId}`);
+
+        if (!input || !preview) return;
+
+        input.addEventListener('change', () => {
+            preview.innerHTML = '';
+
+            Array.from(input.files).forEach((file, index) => {
+                if (file && file.type.startsWith('image/')) {
+                    const div = document.createElement('div');
+                    div.className = 'relative image-preview';
+
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.className = 'image-upload-preview';
+                    img.onload = () => URL.revokeObjectURL(img.src);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '<i class="fas fa-times text-red-600"></i>';
+                    removeBtn.className = 'absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md hover:bg-red-50';
+                    removeBtn.addEventListener('click', () => {
+                        div.remove();
+
+                        // Update file input
+                        const dt = new DataTransfer();
+                        Array.from(input.files).forEach((f, i) => {
+                            if (i !== index) dt.items.add(f);
+                        });
+                        input.files = dt.files;
+                    });
+
+                    div.appendChild(img);
+                    div.appendChild(removeBtn);
+                    preview.appendChild(div);
+                }
+            });
+        });
+    };
+
+    // Form Validation
+    const validateForm = (formData) => {
+        const errors = [];
+
+        const requiredFields = {
+            'name': 'Product name is required',
+            'categoryId': 'Please select a category',
+            'regularPrice': 'Regular price is required',
+            'sku': 'SKU is required',
+            'stockQuantity': 'Stock quantity is required'
+        };
+
+        // Check required fields
+        for (const [field, message] of Object.entries(requiredFields)) {
+            const value = formData.get(field);
+            if (!value || value.toString().trim() === '') {
+                errors.push(message);
+            }
+        }
+
+        // Validate prices
+        const regularPrice = parseFloat(formData.get('regularPrice'));
+        const salePrice = formData.get('salePrice') ? parseFloat(formData.get('salePrice')) : null;
+
+        if (regularPrice && regularPrice <= 0) {
+            errors.push('Regular price must be greater than 0');
+        }
+
+        if (salePrice && salePrice <= 0) {
+            errors.push('Sale price must be greater than 0');
+        }
+
+        if (salePrice && regularPrice && salePrice >= regularPrice) {
+            errors.push('Sale price must be less than regular price');
+        }
+
+        // Validate stock quantity
+        const stockQuantity = parseInt(formData.get('stockQuantity'));
+        if (stockQuantity && stockQuantity < 0) {
+            errors.push('Stock quantity cannot be negative');
+        }
+
+        return errors;
+    };
+
+    // Enhanced Save Product Function
+    const saveProduct = async () => {
+        hideError();
+
+        const form = $('#productForm');
+        const formData = new FormData(form);
+        const saveBtn = $('#saveProduct');
+        const saveButtonText = $('#saveButtonText');
+        const saveButtonSpinner = $('#saveButtonSpinner');
+
+        // Validate form
+        const validationErrors = validateForm(formData);
+        if (validationErrors.length > 0) {
+            showError(validationErrors.join('. '));
+            return;
+        }
+
+        const productId = $('#productId').value;
+        const isEdit = !!productId;
+
+        try {
+            // Show loading state
+            saveBtn.disabled = true;
+            saveButtonText.textContent = isEdit ? 'Updating...' : 'Creating...';
+            saveButtonSpinner.classList.remove('hidden');
+
+            // Prepare API form data
+            const apiFormData = new FormData();
+
+            // Add text fields
+            const textFields = ['name', 'description', 'shortDescription', 'sku', 'stockStatus'];
+            textFields.forEach(field => {
+                const value = formData.get(field);
+                if (value) apiFormData.append(field, value);
+            });
+
+            // Add numeric fields
+            const numericFields = ['regularPrice', 'salePrice', 'stockQuantity', 'categoryId'];
+            numericFields.forEach(field => {
+                const value = formData.get(field);
+                if (value) apiFormData.append(field, value);
+            });
+
+            // Add store ID
+            apiFormData.append('storeId', storeId);
+
+            // Add images
+            const primaryImageInput = $('#primaryImage');
+            if (primaryImageInput.files.length > 0) {
+                Array.from(primaryImageInput.files).forEach(file => {
+                    if (file && file.size > 0) {
+                        apiFormData.append('primaryImage', file);
+                    }
+                });
+            }
+
+            const galleryImagesInput = $('#galleryImages');
+            if (galleryImagesInput.files.length > 0) {
+                Array.from(galleryImagesInput.files).forEach(file => {
+                    if (file && file.size > 0) {
+                        apiFormData.append('galleryImages', file);
+                    }
+                });
+            }
+
+            // Make API request
+            const url = isEdit ?
+                `${apiBaseUrl}/products/update-product/${productId}` :
+                `${apiBaseUrl}/products/create-v-simple-product/`;
+
+            const response = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                body: apiFormData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}`);
+            }
+
+            // Success
+            showToast(isEdit ? 'Product updated successfully!' : 'Product created successfully!');
+            $('#productModal').classList.add('hidden');
+
+            // Reset form
+            form.reset();
+            $('#primaryImagePreview').innerHTML = '';
+            $('#galleryImagesPreview').innerHTML = '';
+            $('#categoryIdHidden').value = '';
+            $('#categoryDisplay').value = '';
+            $('#productId').value = '';
+
+            // Refresh products list
+            await fetchProducts(currentPage, currentFilters.search, currentFilters.status, currentFilters.categoryId);
+
+        } catch (error) {
+            console.error('Error saving product:', error);
+            showError(`Failed to save product: ${error.message}`);
+        } finally {
+            // Reset button state
+            saveBtn.disabled = false;
+            saveButtonText.textContent = 'Save Changes';
+            saveButtonSpinner.classList.add('hidden');
+        }
+    };
+
+    // Enhanced Edit Product Function
+    const editProduct = async (productId) => {
+        const product = productsData.find(p => p.id === parseInt(productId));
+        if (!product) {
+            showErrorToast('Product not found');
+            return;
+        }
+
+        try {
+            // Populate form with product data
+            $('#modalTitle').textContent = 'Edit Product';
+            $('#productId').value = product.id;
+            $('#productName').value = product.name;
+            $('#productSKU').value = product.sku;
+            $('#price').value = product.price;
+            $('#discountPrice').value = product.salePrice || '';
+            $('#stock').value = product.stock;
+            $('#stockStatus').value = product.status;
+            $('#productDescription').value = product.description || '';
+            $('#shortDescription').value = product.shortDescription || '';
+            $('#storeId').value = storeId;
+
+            // Set category if available
+            if (product.categoryId) {
+                $('#categoryIdHidden').value = product.categoryId;
+                $('#categoryDisplay').value = product.categoryName || '';
+            }
+
+            // Show primary image preview if available
+            if (product.image && product.image !== 'https://via.placeholder.com/60x60?text=No+Image') {
+                $('#primaryImagePreview').innerHTML = `
+                    <div class="relative image-preview">
+                        <img src="${product.image}" class="image-upload-preview">
+                        <span class="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 text-xs">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                `;
+            }
+
+            // Clear gallery preview
+            $('#galleryImagesPreview').innerHTML = '';
+
+            // Show modal
+            $('#productModal').classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Error editing product:', error);
+            showErrorToast('Failed to load product data');
+        }
+    };
+
+    // Mobile Sidebar Functions
+    const setupMobileSidebar = () => {
+        const sidebar = $('.sidebar');
+        const overlay = $('#overlay');
+        const mobileMenuToggle = $('#mobileMenuToggle');
+        const sidebarToggle = $('#sidebarToggle');
+
+        const toggleSidebar = () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        };
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        };
+
+        mobileMenuToggle?.addEventListener('click', toggleSidebar);
+        sidebarToggle?.addEventListener('click', toggleSidebar);
+        overlay?.addEventListener('click', closeSidebar);
+    };
+
+    // Initialize Application
+    const initializeApp = async () => {
+        try {
+            // Set store ID in form
+            $('#storeId').value = storeId;
+
+            // Setup mobile sidebar
+            setupMobileSidebar();
+
+            // Load categories and products
+            await populateCategoryFilter();
+            await fetchProducts();
+
+            // Setup category selection
+            setupCategorySelection();
+
+            // Setup image previews
+            setupImagePreview('primaryImage', 'primaryImagePreview');
+            setupImagePreview('galleryImages', 'galleryImagesPreview');
+
+            console.log('Application initialized successfully');
+
+        } catch (error) {
+            console.error('Failed to initialize application:', error);
+            showErrorToast('Failed to initialize application');
+        }
+    };
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initializeApp();
+
+        // Modal controls
+        $('#closeModal')?.addEventListener('click', () => {
+            $('#productModal').classList.add('hidden');
+        });
+
+        $('#cancelModal')?.addEventListener('click', () => {
+            $('#productModal').classList.add('hidden');
+        });
+
+        // Add product button
+        $('#addProductBtn')?.addEventListener('click', () => {
+            $('#modalTitle').textContent = 'Add New Product';
+            $('#productForm').reset();
+            $('#productId').value = '';
+            $('#primaryImagePreview').innerHTML = '';
+            $('#galleryImagesPreview').innerHTML = '';
+            $('#categoryIdHidden').value = '';
+            $('#categoryDisplay').value = '';
+            $('#storeId').value = storeId;
+            $('#productModal').classList.remove('hidden');
+        });
+
+        // Save product button
+        $('#saveProduct')?.addEventListener('click', saveProduct);
+
+        // Search input with debouncing
+        $('#searchInput')?.addEventListener('input', (e) => {
+            handleSearch(e.target.value);
+        });
+
+        // Filter dropdowns
+        $('#statusFilter')?.addEventListener('change', (e) => {
+            handleStatusFilter(e.target.value);
+        });
+
+        $('#categoryFilter')?.addEventListener('change', (e) => {
+            handleCategoryFilter(e.target.value);
+        });
+
+        // Clear filters button
+        $('#clearFilters')?.addEventListener('click', clearFilters);
+
+        // Product actions (Edit/Delete) with event delegation
+        $('#productTableBody')?.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-product');
+            const deleteBtn = e.target.closest('.delete-product');
+
+            if (editBtn) {
+                const productId = editBtn.dataset.id;
+                editProduct(parseInt(productId));
+            }
+
+            if (deleteBtn) {
+                const productId = deleteBtn.dataset.id;
+                deleteProduct(productId);
+            }
+        });
+
+        // Mobile pagination
+        $('#prevPageMobile')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (currentPage > 1) changePage(currentPage - 1);
+        });
+
+        $('#nextPageMobile')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (currentPage < totalPages) changePage(currentPage + 1);
+        });
+
+        // Close modal when clicking outside
+        $('#productModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'productModal') {
+                $('#productModal').classList.add('hidden');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape key to close modal
+            if (e.key === 'Escape') {
+                $('#productModal').classList.add('hidden');
+            }
+
+            // Ctrl+K to focus search
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                $('#searchInput').focus();
+            }
+        });
+    });
+</script>
+</body>
+</html>
+
+

@@ -100,13 +100,15 @@ public class ProductServiceImpl implements ProductService {
 
         product.setUpVariations(variations);
 
-        fileService.upload(request.getPrimaryImage(), product, ImageType.PRIMARY);
+        if(Objects.nonNull(request.getPrimaryImage())) {
+            fileService.upload(request.getPrimaryImage(), product, ImageType.PRIMARY);
+        }
 
-        if (!request.getSizeGuideImage().isEmpty()) {
+        if (Objects.nonNull(request.getSizeGuideImage()) && !request.getSizeGuideImage().isEmpty()) {
             fileService.upload(request.getSizeGuideImage(), product, ImageType.SIZE_GUIDE);
         }
 
-        if (!request.getGalleryImages().isEmpty()) {
+        if (Objects.nonNull(request.getGalleryImages()) && !request.getGalleryImages().isEmpty()) {
             request.getGalleryImages().forEach(x -> {
                 try {
                     fileService.upload(x, product, ImageType.DEFAULT);
@@ -178,8 +180,8 @@ public class ProductServiceImpl implements ProductService {
                 .category(product.getCategories().stream().findFirst().get().getName())
                 .sku(product.getSku())
                 .variationsData(variationResponses)
-//                .stockQuantity(product.getStockQuantity().longValue())
-//                .stockStatus(Objects.isNull(product.getStockStatus().name()) ? null : product.getStockStatus().name())
+                .stockQuantity(product.getStockQuantity().longValue())
+                .stockStatus(StockStatus.IN_STOCK.name())
 //                .backorders(product.getBackOrderAllowed() ? "yes" : "no")
                 .build();
     }
@@ -200,6 +202,7 @@ public class ProductServiceImpl implements ProductService {
                     .id(x.getId())
                     .name(x.getName())
                     .price(x.getPrice())
+                    .stockStatus(StockStatus.IN_STOCK.name())
                     .primaryImage(primaryImage.getUrl())
                     .totalSold(100L)
                     .rating(4.5)
@@ -210,6 +213,91 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<Product> searchProducts(String keyword, String category, Double maxPrice, String sort, Pageable pageable) {
         return productRepository.searchProducts(keyword, category, maxPrice, pageable);
+    }
+
+    @Override
+    public ProductResponse updateProduct(ProductRequest request, Long productId) throws IOException {
+        log.info("update product={}", productId);
+
+        Product product = productRepository.findById(productId).orElseThrow();
+
+        product.setName(request.getName());
+        product.setPrice(request.getRegularPrice());
+        product.setDescription(request.getDescription());
+        product.setShortDescription(request.getShortDescription());
+
+        List<VariationRequest> variationFromRequest = request.getVariationsData();
+
+        List<Variation> variations = variationFromRequest.stream().map(variationRequest -> {
+            Variation variation = Variation.builder()
+                    .stockQuantity(variationRequest.getStock())
+                    .price(variationRequest.getPrice())
+                    .build();
+
+            List<AttributeRequest> attributeRequests = variationRequest.getAttributes();
+
+            List<VariationAttribute> variationAttributes = attributeRequests.stream().map(attributeRequest -> {
+                Attribute attribute = getAttributeByNameOrElseCreateNew(attributeRequest.getName());
+                attributeRepository.save(attribute);
+
+                AttributeTerm attributeTerm = getAttributeTermByNameOrElseCreateNew(attributeRequest.getTerm(), attribute);
+                attributeTermRepository.save(attributeTerm);
+
+                return VariationAttribute.builder()
+                        .variation(variation)
+                        .attributeTerm(attributeTerm)
+                        .build();
+            }).collect(Collectors.toCollection(ArrayList::new));
+
+            variation.setAttributes(variationAttributes);
+            variation.setProduct(product);
+            return variation;
+        }).collect(Collectors.toCollection(ArrayList::new));
+
+        product.setUpVariations(variations);
+
+        if(Objects.nonNull(request.getPrimaryImage())) {
+            fileService.upload(request.getPrimaryImage(), product, ImageType.PRIMARY);
+        }
+
+        if (Objects.nonNull(request.getSizeGuideImage()) && !request.getSizeGuideImage().isEmpty()) {
+            fileService.upload(request.getSizeGuideImage(), product, ImageType.SIZE_GUIDE);
+        }
+
+        if (Objects.nonNull(request.getGalleryImages()) && !request.getGalleryImages().isEmpty()) {
+            request.getGalleryImages().forEach(x -> {
+                try {
+                    fileService.upload(x, product, ImageType.DEFAULT);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+        Categories categories = categoriesRepository
+                .findById(request.getCategoryId()).orElseThrow();
+
+
+        product.setCategories(new ArrayList<>(List.of(categories)));
+
+        productRepository.save(product);
+
+        log.info("product={}", product.getName());
+
+        return ProductResponse.builder()
+                .productName(product.getName())
+                .build();
+    }
+
+    @Override
+    public void deleteProduct(Long productId) {
+        log.info("delete product={}", productId);
+
+        Product product = productRepository.findById(productId).orElseThrow();
+
+        product.setIsDeleted(true);
+
+        productRepository.save(product);
     }
 
 
